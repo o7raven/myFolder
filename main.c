@@ -64,6 +64,7 @@ int server(const struct FLAGS flags) {
     exit(EXIT_FAIL_SOCKET_CREATE);
   }
   struct sockaddr_in address;
+  socklen_t addrlen = sizeof(address);
   bzero(&address, sizeof(address));
   address.sin_family = AF_INET;
   address.sin_port = htons(flags.port);
@@ -75,8 +76,10 @@ int server(const struct FLAGS flags) {
     exit(EXIT_FAIL_SOCKET_LISTEN);
   }
   struct sockaddr clientSocket;
-  if(accept(sockfd, clientSocket, sizeof(clientSocket)) == -1)
-    exit(EXIT_FAIL_SOCKET_ACCEPT)
+  if(accept(sockfd, &clientSocket, &addrlen)== -1){
+    exit(EXIT_FAIL_SOCKET_ACCEPT);
+  }
+  puts("Connection accepted\n");
   exit(EXIT_SUCCESS);
 }
 
