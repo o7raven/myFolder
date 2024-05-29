@@ -49,12 +49,12 @@ int main(int argc, char **argv) {
       flags.type = value;
     }
   }
+  printf("Flag structure filled\nport:%d\nwatchDirectory:%s\ntype:%s\n",flags.port, flags.watchDirectory, flags.type);
   if (!strcmp(flags.type, "server")) {
     server(flags);
   } else if (!strcmp(flags.type, "client")) {
     client(flags);
   }
-  printf("Flag structure filled\nport:%d\nwatchDirectory:%s\ntype:%s\n",flags.port, flags.watchDirectory, flags.type);
   exit(EXIT_SUCCESS);
 }
 
