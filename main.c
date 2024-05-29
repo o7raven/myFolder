@@ -1,8 +1,8 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/socket.h>
 
 #define EXIT_SUCCESS 0
@@ -14,6 +14,7 @@
 #define EXIT_FAIL_SOCKET_LISTEN 6
 #define EXIT_FAIL_SOCKET_ACCEPT 7
 #define EXIT_FAIL_SOCKET_CONNECT 8
+#define EXIT_FAIL_SOCKET_IPCONVERSION 9
 
 struct FLAGS {
   int port;
@@ -96,12 +97,11 @@ int client(const struct FLAGS flags) {
   bzero(&address, sizeof(address));
   address.sin_family = AF_INET;
   address.sin_port = htons(flags.port);
-  address.sin_addr.s_addr = htonl(INADDR_ANY);
-  if (bind(sockfd, (struct sockaddr *)&address, sizeof(address)) == -1) {
-    exit(EXIT_FAIL_SOCKET_BIND);
-  }
+  if(inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) == -1){
+    exit(EXIT_FAIL_SOCKET_IPCONVERSION);
+  } 
   struct sockaddr serverSocket;
-  if (connect(sockfd, &serverSocket, addrlen) == -1) {
+  if(connect(sockfd, &serverSocket, addrlen) == -1){
     exit(EXIT_FAIL_SOCKET_CONNECT);
   }
   puts("Connection established\n");
