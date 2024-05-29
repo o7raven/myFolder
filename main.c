@@ -1,9 +1,9 @@
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAIL 1
@@ -13,6 +13,7 @@
 #define EXIT_FAIL_SOCKET_BIND 5
 #define EXIT_FAIL_SOCKET_LISTEN 6
 #define EXIT_FAIL_SOCKET_ACCEPT 7
+#define EXIT_FAIL_SOCKET_CONNECT 8
 
 struct FLAGS {
   int port;
@@ -48,19 +49,18 @@ int main(int argc, char **argv) {
       flags.type = value;
     }
   }
-  printf("Flag structure filled\nport:%d\nwatchDirectory:%s\ntype:%s\n",
-         flags.port, flags.watchDirectory, flags.type);
   if (!strcmp(flags.type, "server")) {
     server(flags);
   } else if (!strcmp(flags.type, "client")) {
     client(flags);
   }
+  printf("Flag structure filled\nport:%d\nwatchDirectory:%s\ntype:%s\n",flags.port, flags.watchDirectory, flags.type);
   exit(EXIT_SUCCESS);
 }
 
 int server(const struct FLAGS flags) {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if(sockfd==-1){
+  if (sockfd == -1) {
     exit(EXIT_FAIL_SOCKET_CREATE);
   }
   struct sockaddr_in address;
@@ -69,18 +69,43 @@ int server(const struct FLAGS flags) {
   address.sin_family = AF_INET;
   address.sin_port = htons(flags.port);
   address.sin_addr.s_addr = htonl(INADDR_ANY);
-  if(bind(sockfd, (struct sockaddr*)&address, sizeof(address))==-1){
+  if (bind(sockfd, (struct sockaddr *)&address, sizeof(address)) == -1) {
     exit(EXIT_FAIL_SOCKET_BIND);
   }
-  if(listen(sockfd, 0) == -1){
+  if (listen(sockfd, 0) == -1) {
     exit(EXIT_FAIL_SOCKET_LISTEN);
   }
   struct sockaddr clientSocket;
-  if(accept(sockfd, &clientSocket, &addrlen)== -1){
+  if (accept(sockfd, &clientSocket, &addrlen) == -1) {
     exit(EXIT_FAIL_SOCKET_ACCEPT);
   }
   puts("Connection accepted\n");
+  int buffer[3];
+  recv(sockfd, buffer, 3, 0);
+  printf("%d", buffer[2]);
   exit(EXIT_SUCCESS);
 }
 
-int client(const struct FLAGS flags) { exit(EXIT_SUCCESS); }
+int client(const struct FLAGS flags) {
+  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd == -1) {
+    exit(EXIT_FAIL_SOCKET_CREATE);
+  }
+  struct sockaddr_in address;
+  socklen_t addrlen = sizeof(address);
+  bzero(&address, sizeof(address));
+  address.sin_family = AF_INET;
+  address.sin_port = htons(flags.port);
+  address.sin_addr.s_addr = htonl(INADDR_ANY);
+  if (bind(sockfd, (struct sockaddr *)&address, sizeof(address)) == -1) {
+    exit(EXIT_FAIL_SOCKET_BIND);
+  }
+  struct sockaddr serverSocket;
+  if (connect(sockfd, &serverSocket, addrlen) == -1) {
+    exit(EXIT_FAIL_SOCKET_CONNECT);
+  }
+  puts("Connection established\n");
+  int buffer[3]= {1,2,3};
+  send(sockfd, buffer, 3, 0);
+  exit(EXIT_SUCCESS);
+}
