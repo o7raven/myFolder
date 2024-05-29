@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/socket.h>
 
@@ -81,9 +82,6 @@ int server(const struct FLAGS flags) {
     exit(EXIT_FAIL_SOCKET_ACCEPT);
   }
   puts("Connection accepted\n");
-  int buffer[3];
-  recv(sockfd, buffer, 3, 0);
-  printf("%d", buffer[2]);
   exit(EXIT_SUCCESS);
 }
 
@@ -103,8 +101,5 @@ int client(const struct FLAGS flags) {
   if(connect(sockfd, (struct sockaddr*)&address, sizeof(address)) == -1){
     exit(EXIT_FAIL_SOCKET_CONNECT);
   }
-  puts("Connection established\n");
-  int buffer[3]= {1,2,3};
-  send(sockfd, buffer, sizeof(buffer), 0);
   exit(EXIT_SUCCESS);
 }
