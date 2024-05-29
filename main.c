@@ -100,12 +100,11 @@ int client(const struct FLAGS flags) {
   if(inet_pton(AF_INET, "127.0.0.1", &address.sin_addr) == -1){
     exit(EXIT_FAIL_SOCKET_IPCONVERSION);
   } 
-  struct sockaddr serverSocket;
-  if(connect(sockfd, &serverSocket, addrlen) == -1){
+  if(connect(sockfd, (struct sockaddr*)&address, sizeof(address)) == -1){
     exit(EXIT_FAIL_SOCKET_CONNECT);
   }
   puts("Connection established\n");
   int buffer[3]= {1,2,3};
-  send(sockfd, buffer, 3, 0);
+  send(sockfd, buffer, sizeof(buffer), 0);
   exit(EXIT_SUCCESS);
 }
