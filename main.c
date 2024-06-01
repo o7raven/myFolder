@@ -29,6 +29,7 @@ int client(struct FLAGS* flags);
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
+    exit(EXIT_NOT_ENOUGH_ARGS);
   }
   struct FLAGS flags = {0};
   for(int i = 1; i < 9; i+=2){
