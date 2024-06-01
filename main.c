@@ -65,7 +65,7 @@ int main(int argc, char** argv){
       }
     }
   }
-  printf("Flags structure filled:directory:%s\ntype:%c\naddress:%s\nport:%d", flags.dir, flags.type, flags.addr, flags.port);
+  printf("Flags structure filled:directory:%s type:%c address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
   switch (flags.type) {
     case 0:
       server(&flags);
@@ -78,7 +78,7 @@ int main(int argc, char** argv){
 }
 
 int server(struct FLAGS* flags){
-  puts("Starting server...");
+  puts("\nStarting server...\n");
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -98,7 +98,7 @@ int server(struct FLAGS* flags){
   return 0;
 }
 int client(struct FLAGS* flags){
-  puts("Starting client...");
+  puts("\nStarting client...\n");
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -110,7 +110,7 @@ int client(struct FLAGS* flags){
     exit(EXIT_FAIL_SOCKET_CONNECT);
   char strdata[256];
   recv(clientSocket, strdata, sizeof(strdata), 0);
-  printf("%s",strdata);
+  printf("%s\n",strdata);
 
   return 0;
 }
