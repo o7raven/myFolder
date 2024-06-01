@@ -1,4 +1,11 @@
 #!/bin/bash
-./a.out -p 3521 -d null -t server
+
+if [[ $1 == "comp" ]]; then
+  echo "compiling..."
+  gcc main.c
+fi
+
+./a.out -d null -t server -a localhost -p 3562
 exit=$?
-echo "Exit status: $exit"
+echo "Exit status: $exit\n"
+
