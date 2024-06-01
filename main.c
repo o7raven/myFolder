@@ -50,6 +50,7 @@ int main(int argc, char** argv){
         flags.type = 1;
         continue;
       }
+      puts("\nAborting, wrong \"--type\" flag!\n");
       exit(EXIT_FAIL_TYPE);
     }
     if(!strcmp("--address", argv[i]) || !strcmp("-a", argv[i])){
@@ -77,6 +78,7 @@ int main(int argc, char** argv){
 }
 
 int server(struct FLAGS* flags){
+  puts("Starting server...");
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -96,6 +98,7 @@ int server(struct FLAGS* flags){
   return 0;
 }
 int client(struct FLAGS* flags){
+  puts("Starting client...");
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
