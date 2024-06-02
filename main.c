@@ -1,3 +1,4 @@
+#include <bits/types/struct_iovec.h>
 #include <netinet/in.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -6,6 +7,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #define EXIT_SUCCESS 0
 #define EXIT_FAIL_SOCKET_CREATE 1
 #define EXIT_FAIL_SOCKET_BIND 2
@@ -15,6 +17,8 @@
 #define EXIT_NOT_ENOUGH_ARGS 6
 #define EXIT_FAIL_PORT 7
 #define EXIT_FAIL_TYPE 8
+#define EXIT_FAIL_FILE_OPEN 9
+#define EXIT_FAIL_FILE_READ 10
 
 struct FLAGS {
   uint port;
@@ -25,6 +29,7 @@ struct FLAGS {
 
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
+int sendFile(const int* socketfd, const char* fileName);
 
 int main(int argc, char** argv){
   if(argc < 9){
@@ -65,15 +70,18 @@ int main(int argc, char** argv){
       }
     }
   }
+
   printf("Flags structure filled:directory:%s type:%c address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
-  switch (flags.type) {
-    case 0:
-      server(&flags);
-      break;
-    case 1:
-      client(&flags);
-      break;
-  }
+  // switch (flags.type) {
+  //   case 0:
+  //     server(&flags);
+  //     break;
+  //   case 1:
+  //     client(&flags);
+  //     break;
+  // }
+  int testmsg = 0;
+  sendFile(&testmsg, "file.txt");
   exit(EXIT_SUCCESS);
 }
 
@@ -112,5 +120,24 @@ int client(struct FLAGS* flags){
   recv(clientSocket, strdata, sizeof(strdata), 0);
   printf("%s\n",strdata);
 
+  return 0;
+}
+
+int sendFile(const int* socketfd, const char* fileName){
+  FILE* file = fopen(fileName, "r");
+  if(file == NULL)
+    exit(EXIT_FAIL_FILE_OPEN);
+  fseek(file, 0L, SEEK_END);
+  size_t fileSize = ftell(file);
+  fseek(file, 0L, SEEK_SET);
+  printf("\nFile size: %lu\n", fileSize);
+  char* buffer = malloc(fileSize);
+  size_t newLen = fread(buffer, sizeof(char), fileSize, file);
+  if(ferror(file)!=0)
+    exit(EXIT_FAIL_FILE_READ);
+  else
+   buffer[newLen++] = '\0';
+  printf("%s", buffer);
+  fclose(file);
   return 0;
 }
