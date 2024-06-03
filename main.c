@@ -8,17 +8,16 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
-#define EXIT_SUCCESS 0
-#define EXIT_FAIL_SOCKET_CREATE 1
-#define EXIT_FAIL_SOCKET_BIND 2
-#define EXIT_FAIL_SOCKET_LISTEN 3
-#define EXIT_FAIL_SOCKET_ACCEPT 4
-#define EXIT_FAIL_SOCKET_CONNECT 5
-#define EXIT_NOT_ENOUGH_ARGS 6
-#define EXIT_FAIL_PORT 7
-#define EXIT_FAIL_TYPE 8
-#define EXIT_FAIL_FILE_OPEN 9
-#define EXIT_FAIL_FILE_READ 10
+#define EXIT_FAIL_SOCKET_CREATE 0x01
+#define EXIT_FAIL_SOCKET_BIND 0x02
+#define EXIT_FAIL_SOCKET_LISTEN 0x03
+#define EXIT_FAIL_SOCKET_ACCEPT 0x04
+#define EXIT_FAIL_SOCKET_CONNECT 0x05
+#define EXIT_NOT_ENOUGH_ARGS 0x06
+#define EXIT_FAIL_PORT 0x07
+#define EXIT_FAIL_TYPE 0x08
+#define EXIT_FAIL_FILE_OPEN 0x09
+#define EXIT_FAIL_FILE_READ 0x0A
 
 struct FLAGS {
   uint port;
@@ -30,6 +29,7 @@ struct FLAGS {
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendFile(const int* socketfd, const char* fileName);
+int recvFile(const int* socketfd);
 
 int main(int argc, char** argv){
   if(argc < 9){
@@ -72,16 +72,14 @@ int main(int argc, char** argv){
   }
 
   printf("Flags structure filled:directory:%s type:%c address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
-  // switch (flags.type) {
-  //   case 0:
-  //     server(&flags);
-  //     break;
-  //   case 1:
-  //     client(&flags);
-  //     break;
-  // }
-  int testmsg = 0;
-  sendFile(&testmsg, "file.txt");
+  switch (flags.type) {
+    case 0:
+      server(&flags);
+      break;
+    case 1:
+      client(&flags);
+      break;
+  }
   exit(EXIT_SUCCESS);
 }
 
@@ -101,8 +99,7 @@ int server(struct FLAGS* flags){
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
-  char* testmsg = "123";
-  send(clientSocket, testmsg, strlen(testmsg), 0);
+  sendFile(&serverSocket, "file.txt");
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -116,10 +113,14 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
-  char strdata[256];
-  recv(clientSocket, strdata, sizeof(strdata), 0);
-  printf("%s\n",strdata);
+  recvFile(&clientSocket);
 
+  return 0;
+}
+int recvFile(const int* socketfd){
+  char data[sizeof(size_t)];
+  recv(*socketfd, data, sizeof(data), 0);
+  printf("%s", data);
   return 0;
 }
 
@@ -136,8 +137,10 @@ int sendFile(const int* socketfd, const char* fileName){
   if(ferror(file)!=0)
     exit(EXIT_FAIL_FILE_READ);
   else
-   buffer[newLen++] = '\0';
-  printf("%s", buffer);
+     buffer[newLen++] = '\0';
+  printf("Seding buffer:%s\n", buffer);
+  send(*socketfd, buffer, strlen(buffer), 0);
+  free(buffer);
   fclose(file);
   return 0;
 }
