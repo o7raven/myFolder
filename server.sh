@@ -7,5 +7,5 @@ fi
 
 ./a.out -d null -t server -a localhost -p 3562
 exit=$?
-echo "Exit status: $exit\n"
+echo "Exit status: $exit"
 
