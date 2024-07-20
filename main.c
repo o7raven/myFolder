@@ -8,6 +8,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
+
+#define MAX_FILE_SIZE 1024
+
 #define EXIT_FAIL_SOCKET_CREATE 0x01
 #define EXIT_FAIL_SOCKET_BIND 0x02
 #define EXIT_FAIL_SOCKET_LISTEN 0x03
@@ -30,6 +33,7 @@ int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendFile(const int* socketfd, const char* fileName);
 int recvFile(const int* socketfd);
+int printFlags(const struct FLAGS* flags);
 
 int main(int argc, char** argv){
   if(argc < 9){
@@ -84,7 +88,8 @@ int main(int argc, char** argv){
 }
 
 int server(struct FLAGS* flags){
-  puts("\nStarting server...\n");
+  puts("\n---server---\n");
+  puts("Starting server...\n");
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -99,11 +104,13 @@ int server(struct FLAGS* flags){
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
-  sendFile(&clientSocket, "file.txt");
+  sendFile(&clientSocket, "server.txt");
+  recvFile(&clientSocket);
   return 0;
 }
 int client(struct FLAGS* flags){
-  puts("\nStarting client...\n");
+  puts("\n---client---\n");
+  puts("Starting client...\n");
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -114,35 +121,35 @@ int client(struct FLAGS* flags){
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
   recvFile(&clientSocket);
+  sendFile(&clientSocket, "client.txt");
   return 0;
 }
 int recvFile(const int* socketfd){
-  char data[sizeof(size_t)];
-  recv(*socketfd, data, strlen(data), 0);
-  for(int i = 0; i < sizeof(size_t); i++){
-    printf("%c", data[i]);
-  }
+  puts("\n---recvFile---\n");
+  char data[MAX_FILE_SIZE];
+  recv(*socketfd, data, MAX_FILE_SIZE, 0);
+  printf("Received buffer: %s\n", data);
   return 0;
 }
 
 int sendFile(const int* socketfd, const char* fileName){
+  puts("\n---sendFile---\n");
   FILE* file = fopen(fileName, "r");
   if(file == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
   fseek(file, 0L, SEEK_END);
   size_t fileSize = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  printf("\nFile size: %lu\n", fileSize);
-  char* buffer = malloc(fileSize);
+  printf("File size: %lu\n", fileSize);
+  char* buffer = malloc(fileSize+1);
   size_t newLen = fread(buffer, sizeof(char), fileSize, file);
   if(ferror(file)!=0){
     printf("error reading file\n");
     exit(EXIT_FAIL_FILE_READ);
-  }
-  else
-     buffer[newLen++] = '\0';
-  printf("Seding buffer:%s\n", buffer);
-  send(*socketfd, buffer, strlen(buffer), 0);
+  }else
+    buffer[fileSize] = '\0';
+  printf("Sending buffer:%s\n", buffer);
+  send(*socketfd, buffer, MAX_FILE_SIZE,0);
   free(buffer);
   fclose(file);
   return 0;
