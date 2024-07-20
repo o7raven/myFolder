@@ -21,6 +21,8 @@
 #define EXIT_FAIL_TYPE 0x08
 #define EXIT_FAIL_FILE_OPEN 0x09
 #define EXIT_FAIL_FILE_READ 0x0A
+#define EXIT_FAIL_SOCKET_RECEIVE 0x0B
+#define EXIT_FAIL_SOCKET_SEND 0x0C
 
 struct FLAGS {
   uint port;
@@ -127,7 +129,8 @@ int client(struct FLAGS* flags){
 int recvFile(const int* socketfd){
   puts("\n---recvFile---\n");
   char data[MAX_FILE_SIZE];
-  recv(*socketfd, data, MAX_FILE_SIZE, 0);
+  if(recv(*socketfd, data, MAX_FILE_SIZE, 0) == -1)
+    exit(EXIT_FAIL_SOCKET_RECEIVE);
   printf("Received buffer: %s\n", data);
   return 0;
 }
@@ -149,7 +152,12 @@ int sendFile(const int* socketfd, const char* fileName){
   }else
     buffer[fileSize] = '\0';
   printf("Sending buffer:%s\n", buffer);
-  send(*socketfd, buffer, MAX_FILE_SIZE,0);
+  if(send(*socketfd, buffer, MAX_FILE_SIZE,0) == -1)
+  {
+    free(buffer);
+    fclose(file);
+    exit(EXIT_FAIL_SOCKET_SEND);
+  }
   free(buffer);
   fclose(file);
   return 0;
