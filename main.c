@@ -99,7 +99,7 @@ int server(struct FLAGS* flags){
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
-  sendFile(&serverSocket, "file.txt");
+  sendFile(&clientSocket, "file.txt");
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -114,13 +114,14 @@ int client(struct FLAGS* flags){
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
   recvFile(&clientSocket);
-
   return 0;
 }
 int recvFile(const int* socketfd){
   char data[sizeof(size_t)];
-  recv(*socketfd, data, sizeof(data), 0);
-  printf("%s", data);
+  recv(*socketfd, data, strlen(data), 0);
+  for(int i = 0; i < sizeof(size_t); i++){
+    printf("%c", data[i]);
+  }
   return 0;
 }
 
@@ -134,8 +135,10 @@ int sendFile(const int* socketfd, const char* fileName){
   printf("\nFile size: %lu\n", fileSize);
   char* buffer = malloc(fileSize);
   size_t newLen = fread(buffer, sizeof(char), fileSize, file);
-  if(ferror(file)!=0)
+  if(ferror(file)!=0){
+    printf("error reading file\n");
     exit(EXIT_FAIL_FILE_READ);
+  }
   else
      buffer[newLen++] = '\0';
   printf("Seding buffer:%s\n", buffer);
