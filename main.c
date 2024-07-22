@@ -34,7 +34,7 @@ struct FLAGS {
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendFile(const int* socketfd, const char* fileName);
-int recvFile(const int* socketfd);
+int recvFile(const int* socketfd, char* receivedBuffer);
 int printFlags(const struct FLAGS* flags);
 
 int main(int argc, char** argv){
@@ -77,7 +77,7 @@ int main(int argc, char** argv){
     }
   }
 
-  printf("Flags structure filled:directory:%s type:%c address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
+  // printf("Flags structure filled:directory:%s type:%d address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
   switch (flags.type) {
     case 0:
       server(&flags);
@@ -92,6 +92,7 @@ int main(int argc, char** argv){
 int server(struct FLAGS* flags){
   puts("\n---server---\n");
   puts("Starting server...\n");
+  printFlags(flags);
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -107,12 +108,12 @@ int server(struct FLAGS* flags){
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
   sendFile(&clientSocket, "server.txt");
-  recvFile(&clientSocket);
   return 0;
 }
 int client(struct FLAGS* flags){
   puts("\n---client---\n");
   puts("Starting client...\n");
+  printFlags(flags);
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
@@ -122,16 +123,21 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
-  recvFile(&clientSocket);
-  sendFile(&clientSocket, "client.txt");
+  char* receivedFile = malloc(MAX_FILE_SIZE);
+  recvFile(&clientSocket, receivedFile);
+  printf("Received file from client: %s", receivedFile);
+  FILE* newFile = fopen("receivedFile.txt", "w");
+  if(newFile == NULL)
+    exit(EXIT_FAIL_FILE_OPEN);
+  fprintf(newFile, receivedFile);
+  fclose(newFile);
+  free(receivedFile);
   return 0;
 }
-int recvFile(const int* socketfd){
+int recvFile(const int* socketfd, char* receivedBuffer){
   puts("\n---recvFile---\n");
-  char data[MAX_FILE_SIZE];
-  if(recv(*socketfd, data, MAX_FILE_SIZE, 0) == -1)
+  if(recv(*socketfd, receivedBuffer, MAX_FILE_SIZE, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
-  printf("Received buffer: %s\n", data);
   return 0;
 }
 
@@ -160,5 +166,13 @@ int sendFile(const int* socketfd, const char* fileName){
   }
   free(buffer);
   fclose(file);
+  return 0;
+}
+int printFlags(const struct FLAGS* flags){
+  printf("PORT: %d\nADDR: %s\nDIR: %s\n", flags->port, flags->addr, flags->dir);
+  if(flags->type == 0)
+    puts("TYPE: server\n");
+  else
+    puts("TYPE: client\n");
   return 0;
 }
