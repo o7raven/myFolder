@@ -8,3 +8,5 @@ PROBLEMS/TODO
  - error handling missing x
  - watchdog for watching the directory x
  - notifications after directory changes x
+ - database for saving connections
+
