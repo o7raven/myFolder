@@ -1,1 +1,1 @@
-hey, greetings from the server!
+hey, greetings from the client!
