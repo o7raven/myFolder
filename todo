@@ -1,0 +1,10 @@
+PROBLEMS/TODO
+
+ - no directories x
+ - no filename x
+ - fixed size (small) x
+ - not a loop x
+ - not a service x
+ - error handling missing x
+ - watchdog for watching the directory x
+ - notifications after directory changes x
