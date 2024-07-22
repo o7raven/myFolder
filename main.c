@@ -36,8 +36,10 @@ int client(struct FLAGS* flags);
 int sendFile(const int* socketfd, const char* fileName);
 int recvFile(const int* socketfd, char* receivedBuffer);
 int printFlags(const struct FLAGS* flags);
+int notify(const char* message);
 
 int main(int argc, char** argv){
+  notify("s");
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
     exit(EXIT_NOT_ENOUGH_ARGS);
@@ -167,6 +169,9 @@ int sendFile(const int* socketfd, const char* fileName){
   free(buffer);
   fclose(file);
   return 0;
+}
+int notify(const char* message){
+  return system("notify-send test");
 }
 int printFlags(const struct FLAGS* flags){
   printf("PORT: %d\nADDR: %s\nDIR: %s\n", flags->port, flags->addr, flags->dir);
