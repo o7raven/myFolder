@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#define MAX_FILE_SIZE 1024
+#define HEADER_SIZE_BYTES 512 
 
 #define EXIT_FAIL_SOCKET_CREATE 0x01
 #define EXIT_FAIL_SOCKET_BIND 0x02
@@ -26,6 +26,17 @@
 #define EXIT_FAIL_NOTIFY_SEND 0x0D
 
 const char* notificationCommand = "notify-send "; 
+
+typedef struct{
+  char* fileName;
+  size_t contentLength;
+}HEADER;
+
+typedef struct{
+  HEADER header;
+  char* content;
+} PACKET;
+
 struct FLAGS {
   uint port;
   char* addr;
