@@ -1,5 +1,11 @@
-PROBLEMS/TODO
+WORKING ON (TO SOLVE)
+ - making a protocol for easier and more optimized packets
+ - filenames ;) (thought about sending the filename before the file content ex. filename&content
+                but figured making a protocol would be more approprapriate
+                because with headers you define your own filesize instead of a constant)
 
+
+PROBLEMS/TODO
  - no directories x
  - no filename x
  - fixed size (small) x
