@@ -23,7 +23,9 @@
 #define EXIT_FAIL_FILE_READ 0x0A
 #define EXIT_FAIL_SOCKET_RECEIVE 0x0B
 #define EXIT_FAIL_SOCKET_SEND 0x0C
+#define EXIT_FAIL_NOTIFY_SEND 0x0D
 
+const char* notificationCommand = "notify-send "; 
 struct FLAGS {
   uint port;
   char* addr;
@@ -39,7 +41,7 @@ int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 
 int main(int argc, char** argv){
-  notify("s");
+  notify("mrdkyyy");
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
     exit(EXIT_NOT_ENOUGH_ARGS);
@@ -131,7 +133,7 @@ int client(struct FLAGS* flags){
   FILE* newFile = fopen("receivedFile.txt", "w");
   if(newFile == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
-  fprintf(newFile, receivedFile);
+  fprintf(newFile,"%s", receivedFile);
   fclose(newFile);
   free(receivedFile);
   return 0;
@@ -171,7 +173,16 @@ int sendFile(const int* socketfd, const char* fileName){
   return 0;
 }
 int notify(const char* message){
-  return system("notify-send test");
+  char* command = malloc(strlen(notificationCommand)+strlen(message));
+  strcpy(command, notificationCommand);
+  strcat(command, message);
+  printf("%s", command);
+  if(system(command) == -1){
+    free(command);
+    exit(EXIT_FAIL_NOTIFY_SEND);
+  }
+  free(command);
+  return 0;
 }
 int printFlags(const struct FLAGS* flags){
   printf("PORT: %d\nADDR: %s\nDIR: %s\n", flags->port, flags->addr, flags->dir);
