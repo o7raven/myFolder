@@ -9,8 +9,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#define HEADER_SIZE_BYTES 128
-#define MAX_FILENAME_LENGTH 120
+#define MAX_FILENAME_LENGTH 126
 #define MAX_PACKET_SIZE sizeof(size_t)
 
 #define EXIT_FAIL_SOCKET_CREATE 0x01
@@ -30,7 +29,7 @@
 const char* notificationCommand = "notify-send "; 
 
 typedef struct{
-  char fileName[MAX_FILE_NAME_SIZE];
+  char fileName[MAX_FILENAME_LENGTH];
   size_t contentLength;
 }HEADER;
 
@@ -160,24 +159,30 @@ int recvFile(const int* socketfd, PACKET* receivedPacket){
 }
 
 PACKET makePacket(const char* fileName){
+  puts("\n---makePacket---\n");
   FILE* file = fopen(fileName, "r");
   if(file == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
   PACKET packet;
   strncpy(packet.header.fileName, fileName, MAX_FILENAME_LENGTH-1);
-  printf("filename: %s\n", packet.header.fileName);
+  packet.header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
+  printf("Filename: %s\n", packet.header.fileName);
+
   fseek(file, 0L, SEEK_END);
-  // size_t fileSize = ftell(file);
-  // fseek(file, 0L, SEEK_SET);
-  // printf("File size: %lu\n", fileSize);
-  // char* buffer = malloc(fileSize+1);
-  // size_t newLen = fread(buffer, sizeof(char), fileSize, file);
-  // if(ferror(file)!=0){
-  //   printf("error reading file\n");
-  //   exit(EXIT_FAIL_FILE_READ);
-  // }else
-  //   buffer[fileSize] = '\0';
-  // free(buffer);
+  packet.header.contentLength = ftell(file);
+  fseek(file, 0L, SEEK_SET);
+  printf("Content length: %lu\n", packet.header.contentLength);
+  char* content = malloc(packet.header.contentLength+1);
+  fread(content, sizeof(char), packet.header.contentLength, file);
+  if(ferror(file)!=0){
+    printf("error reading file\n");
+    exit(EXIT_FAIL_FILE_READ);
+  }else
+    content[packet.header.contentLength] = '\0';
+
+  //this is wrong ik just testing
+  packet.content = content;
+  free(content);
   fclose(file);
   return packet;
 }
