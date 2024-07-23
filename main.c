@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <time.h>
 
-#define HEADER_SIZE_BYTES 512 
+#define HEADER_SIZE_BYTES 128
+#define MAX_FILENAME_LENGTH 120
+#define MAX_PACKET_SIZE sizeof(size_t)
 
 #define EXIT_FAIL_SOCKET_CREATE 0x01
 #define EXIT_FAIL_SOCKET_BIND 0x02
@@ -28,7 +30,7 @@
 const char* notificationCommand = "notify-send "; 
 
 typedef struct{
-  char* fileName;
+  char fileName[MAX_FILE_NAME_SIZE];
   size_t contentLength;
 }HEADER;
 
@@ -46,13 +48,16 @@ struct FLAGS {
 
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
-int sendFile(const int* socketfd, const char* fileName);
-int recvFile(const int* socketfd, char* receivedBuffer);
+int sendFile(const int* socketfd, const PACKET packet);
+int recvFile(const int* socketfd, PACKET* receivedPacket);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
+int printPacket(const PACKET* packet);
+PACKET makePacket(const char* fileName);
 
 int main(int argc, char** argv){
-  notify("mrdkyyy");
+  makePacket("server.txt");
+  return 0;
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
     exit(EXIT_NOT_ENOUGH_ARGS);
@@ -122,7 +127,7 @@ int server(struct FLAGS* flags){
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
-  sendFile(&clientSocket, "server.txt");
+  // sendFile(&clientSocket, "server.txt");
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -138,49 +143,56 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
-  char* receivedFile = malloc(MAX_FILE_SIZE);
-  recvFile(&clientSocket, receivedFile);
-  printf("Received file from client: %s", receivedFile);
-  FILE* newFile = fopen("receivedFile.txt", "w");
-  if(newFile == NULL)
-    exit(EXIT_FAIL_FILE_OPEN);
-  fprintf(newFile,"%s", receivedFile);
-  fclose(newFile);
-  free(receivedFile);
+  PACKET receivedPacket;
+  recvFile(&clientSocket, &receivedPacket);
+  // FILE* newFile = fopen("receivedFile.txt", "w");
+  // if(newFile == NULL)
+  //   exit(EXIT_FAIL_FILE_OPEN);
+  // fprintf(newFile,"%s", receivedFile);
+  // fclose(newFile);
   return 0;
 }
-int recvFile(const int* socketfd, char* receivedBuffer){
+int recvFile(const int* socketfd, PACKET* receivedPacket){
   puts("\n---recvFile---\n");
-  if(recv(*socketfd, receivedBuffer, MAX_FILE_SIZE, 0) == -1)
+  if(recv(*socketfd, receivedPacket,MAX_PACKET_SIZE, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
   return 0;
 }
 
-int sendFile(const int* socketfd, const char* fileName){
-  puts("\n---sendFile---\n");
+PACKET makePacket(const char* fileName){
   FILE* file = fopen(fileName, "r");
   if(file == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
+  PACKET packet;
+  strncpy(packet.header.fileName, fileName, MAX_FILENAME_LENGTH-1);
+  printf("filename: %s\n", packet.header.fileName);
   fseek(file, 0L, SEEK_END);
-  size_t fileSize = ftell(file);
-  fseek(file, 0L, SEEK_SET);
-  printf("File size: %lu\n", fileSize);
-  char* buffer = malloc(fileSize+1);
-  size_t newLen = fread(buffer, sizeof(char), fileSize, file);
-  if(ferror(file)!=0){
-    printf("error reading file\n");
-    exit(EXIT_FAIL_FILE_READ);
-  }else
-    buffer[fileSize] = '\0';
-  printf("Sending buffer:%s\n", buffer);
-  if(send(*socketfd, buffer, MAX_FILE_SIZE,0) == -1)
-  {
-    free(buffer);
-    fclose(file);
-    exit(EXIT_FAIL_SOCKET_SEND);
-  }
-  free(buffer);
+  // size_t fileSize = ftell(file);
+  // fseek(file, 0L, SEEK_SET);
+  // printf("File size: %lu\n", fileSize);
+  // char* buffer = malloc(fileSize+1);
+  // size_t newLen = fread(buffer, sizeof(char), fileSize, file);
+  // if(ferror(file)!=0){
+  //   printf("error reading file\n");
+  //   exit(EXIT_FAIL_FILE_READ);
+  // }else
+  //   buffer[fileSize] = '\0';
+  // free(buffer);
   fclose(file);
+  return packet;
+}
+
+int sendFile(const int* socketfd, const PACKET packet){
+  puts("\n---sendFile---\n");
+  // printf("Sending buffer:%s\n", buffer);
+  // if(send(*socketfd, buffer, MAX_FILE_SIZE,0) == -1)
+  // {
+  //   free(buffer);
+  //   fclose(file);
+  //   exit(EXIT_FAIL_SOCKET_SEND);
+  // }
+  // free(buffer);
+  // fclose(file);
   return 0;
 }
 int notify(const char* message){
