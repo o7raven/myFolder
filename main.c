@@ -52,7 +52,7 @@ int recvFile(const int* socketfd, PACKET* receivedPacket);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
-PACKET makePacket(const char* fileName);
+PACKET* makePacket(const char* fileName);
 
 int main(int argc, char** argv){
   makePacket("server.txt");
@@ -158,30 +158,30 @@ int recvFile(const int* socketfd, PACKET* receivedPacket){
   return 0;
 }
 
-PACKET makePacket(const char* fileName){
+PACKET* makePacket(const char* fileName){
   puts("\n---makePacket---\n");
   FILE* file = fopen(fileName, "r");
   if(file == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
-  PACKET packet;
-  strncpy(packet.header.fileName, fileName, MAX_FILENAME_LENGTH-1);
-  packet.header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
-  printf("Filename: %s\n", packet.header.fileName);
+  PACKET* packet = malloc(sizeof(PACKET));
+  strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH-1);
+  packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
+  printf("Filename: %s\n", packet->header.fileName);
 
   fseek(file, 0L, SEEK_END);
-  packet.header.contentLength = ftell(file);
+  packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  printf("Content length: %lu\n", packet.header.contentLength);
-  char* content = malloc(packet.header.contentLength+1);
-  fread(content, sizeof(char), packet.header.contentLength, file);
+  printf("Content length: %lu\n", packet->header.contentLength);
+  char* content = malloc(packet->header.contentLength+1);
+  fread(content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     printf("error reading file\n");
     exit(EXIT_FAIL_FILE_READ);
   }else
-    content[packet.header.contentLength] = '\0';
+    content[packet->header.contentLength] = '\0';
 
   //this is wrong ik just testing
-  packet.content = content;
+  packet->content = content;
   free(content);
   fclose(file);
   return packet;
