@@ -155,7 +155,7 @@ int client(struct FLAGS* flags){
 }
 int recvPacket(const int* socketfd, PACKET* receivedPacket){
   puts("\n---recvPacket---\n");
-  if(recv(*socketfd, receivedPacket,MAX_PACKET_SIZE, 0) == -1)
+  if(recv(*socketfd, &receivedPacket,MAX_PACKET_SIZE, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
   return 0;
 }
