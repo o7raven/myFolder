@@ -11,7 +11,6 @@
 #include <time.h>
 
 #define MAX_FILENAME_LENGTH 126
-#define MAX_PACKET_SIZE sizeof(size_t)
 
 #define EXIT_FAIL_SOCKET_CREATE 0x01
 #define EXIT_FAIL_SOCKET_BIND 0x02
@@ -50,7 +49,7 @@ struct FLAGS {
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendPacket(const int* socketfd, const PACKET* packet);
-int recvPacket(const int* socketfd, PACKET* receivedPacket);
+PACKET* recvPacket(const int* socketfd);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
@@ -145,11 +144,10 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
-  PACKET receivedPacket;
-  recvPacket(&clientSocket, &receivedPacket);
-  puts("receivedpacket:");
-  printf("%ld", receivedPacket.header.contentLength);
-  // printPacket(&receivedPacket);
+  PACKET* receivedPacket = recvPacket(&clientSocket);
+  // puts("receivedpacket:");
+  // printPacket(receivedPacket);
+  free(receivedPacket);
   // FILE* newFile = fopen("receivedFile.txt", "w");
   // if(newFile == NULL)
   //   exit(EXIT_FAIL_FILE_OPEN);
@@ -157,16 +155,19 @@ int client(struct FLAGS* flags){
   // fclose(newFile);
   return 0;
 }
-int recvPacket(const int* socketfd, PACKET* receivedPacket){
+PACKET* recvPacket(const int* socketfd){
   puts("\n---recvPacket---\n");
-  if(recv(*socketfd, receivedPacket,MAX_PACKET_SIZE, 0) == -1)
+  PACKET* packet = malloc(sizeof(PACKET));
+  if(recv(*socketfd, &packet->header,sizeof(HEADER), 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
-  return 0;
+  puts("printing header\n");
+  printf("filname:%s\nfilesize:%zu\n", packet->header.fileName, packet->header.contentLength);
+  return NULL;
 }
 int sendPacket(const int* socketfd, const PACKET* packet){
   puts("\n---sendPacket---\n");
   printPacket(packet);
-  if(send(*socketfd, packet, MAX_PACKET_SIZE,0) == -1)
+  if(send(*socketfd, &packet->header, sizeof(HEADER),0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   puts("packet has been sent successfully!\n");
   return 0;
@@ -199,7 +200,7 @@ PACKET* makePacket(const char* fileName){
 int printPacket(const PACKET* packet){
   puts("\n---printPacket---\n");
   puts("\t---Header\n");
-  printf("\t\tfileName: %s\n\t\tcontentLength: %ld\n", packet->header.fileName, packet->header.contentLength);
+  printf("\t\tfileName: %s\n\t\tcontentLength: %zu\n", packet->header.fileName, packet->header.contentLength);
   puts("\t---Content\n");
   printf("\t\t%s\n", packet->content);
   return 0;
