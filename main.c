@@ -145,8 +145,8 @@ int client(struct FLAGS* flags){
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
   PACKET* receivedPacket = recvPacket(&clientSocket);
-  // puts("receivedpacket:");
-  // printPacket(receivedPacket);
+  puts("receivedpacket:");
+  printPacket(receivedPacket);
   free(receivedPacket);
   // FILE* newFile = fopen("receivedFile.txt", "w");
   // if(newFile == NULL)
@@ -160,14 +160,18 @@ PACKET* recvPacket(const int* socketfd){
   PACKET* packet = malloc(sizeof(PACKET));
   if(recv(*socketfd, &packet->header,sizeof(HEADER), 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
-  puts("printing header\n");
-  printf("filname:%s\nfilesize:%zu\n", packet->header.fileName, packet->header.contentLength);
-  return NULL;
+  packet->content = malloc(packet->header.contentLength+1);
+  if(recv(*socketfd, packet->content,packet->header.contentLength, 0) == -1)
+    exit(EXIT_FAIL_SOCKET_RECEIVE);
+  packet->content[packet->header.contentLength] = '\0';
+  return packet;
 }
 int sendPacket(const int* socketfd, const PACKET* packet){
   puts("\n---sendPacket---\n");
   printPacket(packet);
   if(send(*socketfd, &packet->header, sizeof(HEADER),0) == -1)
+    exit(EXIT_FAIL_SOCKET_SEND);
+  if(send(*socketfd, &packet->content, packet->header.contentLength,0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   puts("packet has been sent successfully!\n");
   return 0;
@@ -187,7 +191,7 @@ PACKET* makePacket(const char* fileName){
   packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
   // printf("Content length: %lu\n", packet->header.contentLength);
-  packet->content = malloc(packet->header.contentLength+1);
+  packet->content = malloc(packet->header.contentLength);
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     printf("error reading file\n");
