@@ -26,6 +26,7 @@
 #define EXIT_FAIL_SOCKET_RECEIVE 0x0B
 #define EXIT_FAIL_SOCKET_SEND 0x0C
 #define EXIT_FAIL_NOTIFY_SEND 0x0D
+#define EXIT_FAIL_SOCKET_REUSE 0x0E
 
 const char* notificationCommand = "notify-send "; 
 
@@ -114,6 +115,8 @@ int server(struct FLAGS* flags){
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1)
     exit(EXIT_FAIL_SOCKET_CREATE);
+  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+      exit(EXIT_FAIL_SOCKET_REUSE);
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
@@ -145,7 +148,8 @@ int client(struct FLAGS* flags){
   PACKET receivedPacket;
   recvPacket(&clientSocket, &receivedPacket);
   puts("receivedpacket:");
-  printPacket(&receivedPacket);
+  printf("%ld", receivedPacket.header.contentLength);
+  // printPacket(&receivedPacket);
   // FILE* newFile = fopen("receivedFile.txt", "w");
   // if(newFile == NULL)
   //   exit(EXIT_FAIL_FILE_OPEN);
@@ -155,8 +159,16 @@ int client(struct FLAGS* flags){
 }
 int recvPacket(const int* socketfd, PACKET* receivedPacket){
   puts("\n---recvPacket---\n");
-  if(recv(*socketfd, &receivedPacket,MAX_PACKET_SIZE, 0) == -1)
+  if(recv(*socketfd, receivedPacket,MAX_PACKET_SIZE, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
+  return 0;
+}
+int sendPacket(const int* socketfd, const PACKET* packet){
+  puts("\n---sendPacket---\n");
+  printPacket(packet);
+  if(send(*socketfd, packet, MAX_PACKET_SIZE,0) == -1)
+    exit(EXIT_FAIL_SOCKET_SEND);
+  puts("packet has been sent successfully!\n");
   return 0;
 }
 
@@ -193,16 +205,6 @@ int printPacket(const PACKET* packet){
   return 0;
 }
 
-int sendPacket(const int* socketfd, const PACKET* packet){
-  puts("\n---sendPacket---\n");
-  printPacket(packet);
-  if(send(*socketfd, packet, MAX_PACKET_SIZE,0) == -1)
-  {
-    exit(EXIT_FAIL_SOCKET_SEND);
-  }
-  puts("packet has been sent successfully!");
-  return 0;
-}
 int notify(const char* message){
   char* command = malloc(strlen(notificationCommand)+strlen(message));
   strcpy(command, notificationCommand);
