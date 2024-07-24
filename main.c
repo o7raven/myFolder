@@ -156,6 +156,11 @@ int client(struct FLAGS* flags){
   return 0;
 }
 PACKET* recvPacket(const int* socketfd){
+  /*
+   *
+   *CONTINUE HERE (fix the content packet corruption)
+   *
+   * */
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
   if(recv(*socketfd, &packet->header,sizeof(HEADER), 0) == -1)
