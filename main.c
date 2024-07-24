@@ -172,17 +172,13 @@ PACKET* makePacket(const char* fileName){
   packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
   printf("Content length: %lu\n", packet->header.contentLength);
-  char* content = malloc(packet->header.contentLength+1);
-  fread(content, sizeof(char), packet->header.contentLength, file);
+  packet->content = malloc(packet->header.contentLength+1);
+  fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     printf("error reading file\n");
     exit(EXIT_FAIL_FILE_READ);
   }else
-    content[packet->header.contentLength] = '\0';
-
-  //this is wrong ik just testing
-  packet->content = content;
-  free(content);
+    packet->content[packet->header.contentLength] = '\0';
   fclose(file);
   return packet;
 }
