@@ -1,1 +1,1 @@
-peer to peer cloud-like daemon to share directories among computers
+peer to peer cloud-like daemon to share a directory among computers
