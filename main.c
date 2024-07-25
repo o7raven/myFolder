@@ -177,7 +177,7 @@ int sendPacket(const int* socketfd, const PACKET* packet){
   printPacket(packet);
   if(send(*socketfd, &packet->header, sizeof(HEADER),0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
-  if(send(*socketfd, &packet->content,packet->header.contentLength,0) == -1)
+  if(send(*socketfd, packet->content,packet->header.contentLength,0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   puts("packet has been sent successfully!\n");
   return 0;
