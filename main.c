@@ -156,6 +156,7 @@ int client(struct FLAGS* flags){
   return 0;
 }
 PACKET* recvPacket(const int* socketfd){
+  char test[4];
   /*
    *
    *CONTINUE HERE (fix the content packet corruption)
@@ -176,7 +177,7 @@ int sendPacket(const int* socketfd, const PACKET* packet){
   printPacket(packet);
   if(send(*socketfd, &packet->header, sizeof(HEADER),0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
-  if(send(*socketfd, &packet->content, packet->header.contentLength,0) == -1)
+  if(send(*socketfd, &packet->content,packet->header.contentLength,0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   puts("packet has been sent successfully!\n");
   return 0;
