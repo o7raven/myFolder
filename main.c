@@ -48,8 +48,8 @@ struct FLAGS {
 
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
-int sendPacket(const int* socketfd, const PACKET* packet);
-PACKET* recvPacket(const int* socketfd);
+int sendPacket(const int socketfd, const PACKET* packet);
+PACKET* recvPacket(const int socketfd);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
@@ -128,7 +128,7 @@ int server(struct FLAGS* flags){
   if(clientSocket == -1)
     exit(EXIT_FAIL_SOCKET_ACCEPT);
   PACKET* packet = makePacket("server.txt");
-  sendPacket(&clientSocket, packet);
+  sendPacket(clientSocket, packet);
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -144,7 +144,7 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
     exit(EXIT_FAIL_SOCKET_CONNECT);
-  PACKET* receivedPacket = recvPacket(&clientSocket);
+  PACKET* receivedPacket = recvPacket(clientSocket);
   puts("receivedpacket:");
   printPacket(receivedPacket);
   free(receivedPacket);
@@ -155,7 +155,7 @@ int client(struct FLAGS* flags){
   // fclose(newFile);
   return 0;
 }
-PACKET* recvPacket(const int* socketfd){
+PACKET* recvPacket(const int socketfd){
   char test[4];
   /*
    *
@@ -164,20 +164,20 @@ PACKET* recvPacket(const int* socketfd){
    * */
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
-  if(recv(*socketfd, &packet->header,sizeof(HEADER), 0) == -1)
+  if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
   packet->content = malloc(packet->header.contentLength+1);
-  if(recv(*socketfd, packet->content,packet->header.contentLength, 0) == -1)
+  if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
   packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
-int sendPacket(const int* socketfd, const PACKET* packet){
+int sendPacket(const int socketfd, const PACKET* packet){
   puts("\n---sendPacket---\n");
   printPacket(packet);
-  if(send(*socketfd, &packet->header, sizeof(HEADER),0) == -1)
+  if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
-  if(send(*socketfd, packet->content,packet->header.contentLength,0) == -1)
+  if(send(socketfd, packet->content,packet->header.contentLength,0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   puts("packet has been sent successfully!\n");
   return 0;
