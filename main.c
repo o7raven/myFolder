@@ -58,6 +58,7 @@ int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
 PACKET* makePacket(const char* fileName);
+int checkHex(uint64_t n);
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
@@ -231,5 +232,12 @@ int printFlags(const struct FLAGS* flags){
     puts("TYPE: server\n");
   else
     puts("TYPE: client\n");
+  return 0;
+}
+
+int checkHex(uint64_t n)
+{
+  uint64_t swapped = bswap_64(n);
+  printf("original: 0x%016"PRIx64"\nSwapped: 0x%016"PRIx64"\n", n, swapped);
   return 0;
 }
