@@ -3,6 +3,7 @@ WORKING ON (TO SOLVE)
  - filenames DONE
  - converting to MSB big endian - num 1 priority
  - FIXING MEMORY LEAKS - intentionally left out
+ - sending n receiving in a loop
 
 
 
