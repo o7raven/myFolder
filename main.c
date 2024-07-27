@@ -162,9 +162,12 @@ int client(struct FLAGS* flags){
 PACKET* recvPacket(const int socketfd){
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
+  puts("receiving header...\n");
   if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
+  packet->header.contentLength = bswap_64(packet->header.contentLength);
   packet->content = malloc(packet->header.contentLength+1);
+  puts("receiving content...\n");
   if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1)
     exit(EXIT_FAIL_SOCKET_RECEIVE);
   packet->content[packet->header.contentLength] = '\0';
@@ -172,7 +175,6 @@ PACKET* recvPacket(const int socketfd){
 }
 int sendPacket(const int socketfd, const PACKET* packet){
   puts("\n---sendPacket---\n");
-  printPacket(packet);
   if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1)
     exit(EXIT_FAIL_SOCKET_SEND);
   if(send(socketfd, packet->content,packet->header.contentLength,0) == -1)
@@ -203,6 +205,7 @@ PACKET* makePacket(const char* fileName){
   }else
     packet->content[packet->header.contentLength] = '\0';
   fclose(file);
+  printPacket(packet);
   checkHex(packet->header.contentLength);
   packet->header.contentLength = bswap_64(packet->header.contentLength);
   return packet;
