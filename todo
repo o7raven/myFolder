@@ -4,7 +4,7 @@ WORKING ON (TO SOLVE)
  - converting to MSB big endian - DONE
  - FIXING MEMORY LEAKS - intentionally left out
  - sending n receiving in a loop
- - saving sent file / improve project structure 
+ - saving sent file / improve project structure - DONE
 
 
 
