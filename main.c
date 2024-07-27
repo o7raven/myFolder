@@ -9,7 +9,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
-
+#include <byteswap.h>
+//#include <intin.h> for Windows
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
