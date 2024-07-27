@@ -10,6 +10,9 @@
 #include <sys/types.h>
 #include <time.h>
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #define MAX_FILENAME_LENGTH 126
 
 #define EXIT_FAIL_SOCKET_CREATE 0x01
@@ -203,7 +206,7 @@ PACKET* makePacket(const char* fileName){
 int printPacket(const PACKET* packet){
   puts("\n---printPacket---\n");
   puts("\t---Header\n");
-  printf("\t\tfileName: %s\n\t\tcontentLength: %zu\n", packet->header.fileName, packet->header.contentLength);
+  printf("\t\tfileName: %s\n\t\tcontentLength: %"PRIu64"\n", packet->header.fileName, packet->header.contentLength);
   puts("\t---Content\n");
   printf("\t\t%s\n", packet->content);
   return 0;
@@ -228,9 +231,4 @@ int printFlags(const struct FLAGS* flags){
   else
     puts("TYPE: client\n");
   return 0;
-}
-
-
-size_t fromLSBtoMSB(size_t n){
-
 }
