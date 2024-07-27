@@ -203,6 +203,8 @@ PACKET* makePacket(const char* fileName){
   }else
     packet->content[packet->header.contentLength] = '\0';
   fclose(file);
+  checkHex(packet->header.contentLength);
+  packet->header.contentLength = bswap_64(packet->header.contentLength);
   return packet;
 }
 int printPacket(const PACKET* packet){
