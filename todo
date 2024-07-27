@@ -1,7 +1,7 @@
 WORKING ON (TO SOLVE)
  - making a protocol for easier and more optimized packets - DONE
  - filenames DONE
- - converting to MSB big endian - num 1 priority
+ - converting to MSB big endian - num 1 priority DONE
  - FIXING MEMORY LEAKS - intentionally left out
  - sending n receiving in a loop
 
