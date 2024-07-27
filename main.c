@@ -54,7 +54,7 @@ int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
 PACKET* makePacket(const char* fileName);
-size_t size_tToMSB(size_t num);
+size_t fromLSBtoMSB(size_t num);
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
