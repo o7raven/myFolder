@@ -153,13 +153,13 @@ int client(struct FLAGS* flags){
   PACKET* receivedPacket = recvPacket(clientSocket);
   puts("receivedpacket:");
   printPacket(receivedPacket);
-  free(receivedPacket->content);
-  free(receivedPacket);
   FILE* newFile = fopen(receivedPacket->header.fileName, "w");
   if(newFile == NULL)
     exit(EXIT_FAIL_FILE_OPEN);
   fprintf(newFile,"%s", receivedPacket->content);
   fclose(newFile);
+  free(receivedPacket->content);
+  free(receivedPacket);
   return 0;
 }
 PACKET* recvPacket(const int socketfd){
