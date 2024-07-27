@@ -59,6 +59,8 @@ int notify(const char* message);
 int printPacket(const PACKET* packet);
 PACKET* makePacket(const char* fileName);
 int checkHex(uint64_t n);
+int deletePacket(PACKET* packet);
+
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
@@ -151,12 +153,13 @@ int client(struct FLAGS* flags){
   PACKET* receivedPacket = recvPacket(clientSocket);
   puts("receivedpacket:");
   printPacket(receivedPacket);
+  free(receivedPacket->content);
   free(receivedPacket);
-  // FILE* newFile = fopen("receivedFile.txt", "w");
-  // if(newFile == NULL)
-  //   exit(EXIT_FAIL_FILE_OPEN);
-  // fprintf(newFile,"%s", receivedFile);
-  // fclose(newFile);
+  FILE* newFile = fopen(receivedPacket->header.fileName, "w");
+  if(newFile == NULL)
+    exit(EXIT_FAIL_FILE_OPEN);
+  fprintf(newFile,"%s", receivedPacket->content);
+  fclose(newFile);
   return 0;
 }
 PACKET* recvPacket(const int socketfd){
