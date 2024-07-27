@@ -1,5 +1,5 @@
 WORKING ON (TO SOLVE)
- - making a protocol for easier and more optimized packets
+ - making a protocol for easier and more optimized packets - DONE
  - filenames DONE
  - converting to MSB big endian - num 1 priority
  - FIXING MEMORY LEAKS - intentionally left out
