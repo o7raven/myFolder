@@ -31,7 +31,7 @@ const char* notificationCommand = "notify-send ";
 
 typedef struct{
   char fileName[MAX_FILENAME_LENGTH];
-  size_t contentLength;
+  uint64_t contentLength;
 }HEADER;
 
 typedef struct{
@@ -54,8 +54,6 @@ int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
 PACKET* makePacket(const char* fileName);
-size_t fromLSBtoMSB(size_t n);
-size_t fromMSBtoLSB(size_t n);
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
