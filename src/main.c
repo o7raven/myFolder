@@ -135,6 +135,7 @@ int server(struct FLAGS* flags){
     exit(EXIT_FAIL_SOCKET_ACCEPT);
   PACKET* packet = makePacket("server.txt");
   sendPacket(clientSocket, packet);
+  deletePacket(packet);
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -158,8 +159,7 @@ int client(struct FLAGS* flags){
     exit(EXIT_FAIL_FILE_OPEN);
   fprintf(newFile,"%s", receivedPacket->content);
   fclose(newFile);
-  free(receivedPacket->content);
-  free(receivedPacket);
+  deletePacket(receivedPacket);
   return 0;
 }
 PACKET* recvPacket(const int socketfd){
@@ -194,16 +194,14 @@ PACKET* makePacket(const char* fileName){
   PACKET* packet = malloc(sizeof(PACKET));
   strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH-1);
   packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
-  // printf("Filename: %s\n", packet->header.fileName);
-
   fseek(file, 0L, SEEK_END);
   packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  // printf("Content length: %lu\n", packet->header.contentLength);
   packet->content = malloc(packet->header.contentLength);
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     printf("error reading file\n");
+    deletePacket(packet);
     exit(EXIT_FAIL_FILE_READ);
   }else
     packet->content[packet->header.contentLength] = '\0';
@@ -213,6 +211,12 @@ PACKET* makePacket(const char* fileName){
   packet->header.contentLength = bswap_64(packet->header.contentLength);
   return packet;
 }
+int deletePacket(PACKET* packet){
+  free(packet->content);
+  free(packet);
+  return 0;
+}
+
 int printPacket(const PACKET* packet){
   puts("\n---printPacket---\n");
   puts("\t---Header\n");
