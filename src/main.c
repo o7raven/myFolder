@@ -118,7 +118,7 @@ int server(struct FLAGS* flags){
     close(serverSocket);
     return EXIT_FAIL_SOCKET_CREATE;
   }
-  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
+  if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
     close(serverSocket);
     return EXIT_FAIL_SOCKET_REUSE;
   }
