@@ -1,8 +1,10 @@
 WORKING ON (TO SOLVE)
+ - num1 priority - PROPER ERROR HANDLING 
+
  - making a protocol for easier and more optimized packets - DONE
  - filenames DONE
  - converting to MSB big endian - DONE
- - FIXING MEMORY LEAKS - intentionally left out
+ - FIXING MEMORY LEAKS - intentionally left out DONE
  - sending n receiving in a loop
  - saving sent file / improve project structure - DONE
 
@@ -13,7 +15,6 @@ PROBLEMS/TODO
  - fixed size (small) x
  - not a loop x
  - not a service x
- - error handling missing x
  - watchdog for watching the directory x
  - notifications after directory changes x
  - database for saving connections
