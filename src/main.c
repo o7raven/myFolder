@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <time.h>
 #include <byteswap.h>
@@ -136,6 +137,9 @@ int server(struct FLAGS* flags){
   PACKET* packet = makePacket("server.txt");
   sendPacket(clientSocket, packet);
   deletePacket(packet);
+
+  close(serverSocket);
+  close(clientSocket);
   return 0;
 }
 int client(struct FLAGS* flags){
@@ -160,6 +164,8 @@ int client(struct FLAGS* flags){
   fprintf(newFile,"%s", receivedPacket->content);
   fclose(newFile);
   deletePacket(receivedPacket);
+
+  close(clientSocket);
   return 0;
 }
 PACKET* recvPacket(const int socketfd){
