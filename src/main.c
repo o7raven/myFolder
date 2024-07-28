@@ -141,11 +141,9 @@ int server(struct FLAGS* flags){
     return EXIT_FAIL_SOCKET_ACCEPT;
   }
 
-  // error handling needed
   int err = EXIT_SUCCESS;
   PACKET* packet = makePacket("server.txt", &err);
   if(err != EXIT_SUCCESS){
-    deletePacket(packet);
     close(serverSocket);
     close(clientSocket);
     return err;
@@ -153,6 +151,8 @@ int server(struct FLAGS* flags){
   if(sendPacket(clientSocket, packet) != EXIT_SUCCESS){
     return err;
   }
+
+  deletePacket(packet);
   close(serverSocket);
   close(clientSocket);
   return EXIT_SUCCESS;
