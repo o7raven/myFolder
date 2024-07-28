@@ -53,7 +53,7 @@ struct FLAGS {
 
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
-int sendPacket(const int socketfd, const PACKET* packet);
+int sendPacket(const int socketfd, PACKET* packet);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
@@ -115,33 +115,44 @@ int server(struct FLAGS* flags){
   printFlags(flags);
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1){
+    close(serverSocket);
     return EXIT_FAIL_SOCKET_CREATE;
   }
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
-      return EXIT_FAIL_SOCKET_REUSE;
+    close(serverSocket);
+    return EXIT_FAIL_SOCKET_REUSE;
   }
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1){
+    close(serverSocket);
     return EXIT_FAIL_SOCKET_BIND;
   }
   if(listen(serverSocket, 1) == -1){
+    close(serverSocket);
     return EXIT_FAIL_SOCKET_LISTEN;
   }
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1){
+    close(serverSocket);
+    close(clientSocket);
     return EXIT_FAIL_SOCKET_ACCEPT;
   }
 
   // error handling needed
-  int err = 0;
+  int err = EXIT_SUCCESS;
   PACKET* packet = makePacket("server.txt", &err);
-  sendPacket(clientSocket, packet);
-
-  deletePacket(packet);
-
+  if(err != EXIT_SUCCESS){
+    deletePacket(packet);
+    close(serverSocket);
+    close(clientSocket);
+    return err;
+  }
+  if(sendPacket(clientSocket, packet) != EXIT_SUCCESS){
+    return err;
+  }
   close(serverSocket);
   close(clientSocket);
   return EXIT_SUCCESS;
@@ -152,6 +163,7 @@ int client(struct FLAGS* flags){
   printFlags(flags);
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1){
+    close(clientSocket);
     return EXIT_FAIL_SOCKET_CREATE;
   }
   struct sockaddr_in serverAddress;
@@ -159,25 +171,30 @@ int client(struct FLAGS* flags){
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+    close(clientSocket);
     return EXIT_FAIL_SOCKET_CONNECT;
   }
 
   // error handling needed
-  int err = 0;
+  int err = EXIT_SUCCESS;
   PACKET* receivedPacket = recvPacket(clientSocket, &err);
-
-  puts("receivedpacket:");
+  if(err != EXIT_SUCCESS){
+    close(clientSocket);
+    return err;
+  }
   printPacket(receivedPacket);
   FILE* newFile = fopen(receivedPacket->header.fileName, "w");
   if(newFile == NULL){
+    close(clientSocket);
+    deletePacket(receivedPacket);
+    fclose(newFile);
     return EXIT_FAIL_FILE_OPEN;
   }
   fprintf(newFile,"%s", receivedPacket->content);
   fclose(newFile);
   deletePacket(receivedPacket);
-
   close(clientSocket);
-  return 0;
+  return EXIT_SUCCESS;
 }
 PACKET* recvPacket(const int socketfd, int* errorCode){
   puts("\n---recvPacket---\n");
@@ -199,16 +216,18 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
-int sendPacket(const int socketfd, const PACKET* packet){
+int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
   if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1){
+    deletePacket(packet);
     return EXIT_FAIL_SOCKET_SEND;
   }
   if(send(socketfd, packet->content,packet->header.contentLength,0) == -1){
+    deletePacket(packet);
     return EXIT_FAIL_SOCKET_SEND;
   }
   puts("packet has been sent successfully!\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 PACKET* makePacket(const char* fileName, int* errorCode){
@@ -228,7 +247,9 @@ PACKET* makePacket(const char* fileName, int* errorCode){
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     *errorCode = EXIT_FAIL_FILE_READ;
+    fclose(file);
     deletePacket(packet);
+    return NULL;
   }else
     packet->content[packet->header.contentLength] = '\0';
   fclose(file);
