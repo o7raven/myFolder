@@ -54,11 +54,11 @@ struct FLAGS {
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendPacket(const int socketfd, const PACKET* packet);
-PACKET* recvPacket(const int socketfd);
 int printFlags(const struct FLAGS* flags);
 int notify(const char* message);
 int printPacket(const PACKET* packet);
-PACKET* makePacket(const char* fileName);
+PACKET* makePacket(const char* fileName, int* errorCode);
+PACKET* recvPacket(const int socketfd, int* errorCode);
 int checkHex(uint64_t n);
 int deletePacket(PACKET* packet);
 
@@ -101,17 +101,12 @@ int main(int argc, char** argv){
       }
     }
   }
-
-  // printf("Flags structure filled:directory:%s type:%d address:%s port:%d\n", flags.dir, flags.type, flags.addr, flags.port);
   switch (flags.type) {
     case 0:
-      server(&flags);
-      break;
+      exit(server(&flags));
     case 1:
-      client(&flags);
-      break;
+      exit(client(&flags));
   }
-  exit(EXIT_SUCCESS);
 }
 
 int server(struct FLAGS* flags){
@@ -119,48 +114,64 @@ int server(struct FLAGS* flags){
   puts("Starting server...\n");
   printFlags(flags);
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if(serverSocket == -1)
-    exit(EXIT_FAIL_SOCKET_CREATE);
-  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
-      exit(EXIT_FAIL_SOCKET_REUSE);
+  if(serverSocket == -1){
+    return EXIT_FAIL_SOCKET_CREATE;
+  }
+  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
+      return EXIT_FAIL_SOCKET_REUSE;
+  }
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-  if(bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1)
-    exit(EXIT_FAIL_SOCKET_BIND);
-  if(listen(serverSocket, 1) == -1)
-    exit(EXIT_FAIL_SOCKET_LISTEN);
+  if(bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1){
+    return EXIT_FAIL_SOCKET_BIND;
+  }
+  if(listen(serverSocket, 1) == -1){
+    return EXIT_FAIL_SOCKET_LISTEN;
+  }
   int clientSocket = accept(serverSocket, NULL, NULL);
-  if(clientSocket == -1)
-    exit(EXIT_FAIL_SOCKET_ACCEPT);
-  PACKET* packet = makePacket("server.txt");
+  if(clientSocket == -1){
+    return EXIT_FAIL_SOCKET_ACCEPT;
+  }
+
+  // error handling needed
+  int err = 0;
+  PACKET* packet = makePacket("server.txt", &err);
   sendPacket(clientSocket, packet);
+
   deletePacket(packet);
 
   close(serverSocket);
   close(clientSocket);
-  return 0;
+  return EXIT_SUCCESS;
 }
 int client(struct FLAGS* flags){
   puts("\n---client---\n");
   puts("Starting client...\n");
   printFlags(flags);
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if(clientSocket == -1)
-    exit(EXIT_FAIL_SOCKET_CREATE);
+  if(clientSocket == -1){
+    return EXIT_FAIL_SOCKET_CREATE;
+  }
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-  if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1)
-    exit(EXIT_FAIL_SOCKET_CONNECT);
-  PACKET* receivedPacket = recvPacket(clientSocket);
+  if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+    return EXIT_FAIL_SOCKET_CONNECT;
+  }
+
+  // error handling needed
+  int err = 0;
+  PACKET* receivedPacket = recvPacket(clientSocket, &err);
+
   puts("receivedpacket:");
   printPacket(receivedPacket);
   FILE* newFile = fopen(receivedPacket->header.fileName, "w");
-  if(newFile == NULL)
-    exit(EXIT_FAIL_FILE_OPEN);
+  if(newFile == NULL){
+    return EXIT_FAIL_FILE_OPEN;
+  }
   fprintf(newFile,"%s", receivedPacket->content);
   fclose(newFile);
   deletePacket(receivedPacket);
@@ -168,35 +179,45 @@ int client(struct FLAGS* flags){
   close(clientSocket);
   return 0;
 }
-PACKET* recvPacket(const int socketfd){
+PACKET* recvPacket(const int socketfd, int* errorCode){
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
   puts("receiving header...\n");
-  if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1)
-    exit(EXIT_FAIL_SOCKET_RECEIVE);
+  if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1){
+    *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
+    free(packet);
+    return NULL;
+  }
   packet->header.contentLength = bswap_64(packet->header.contentLength);
   packet->content = malloc(packet->header.contentLength+1);
   puts("receiving content...\n");
-  if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1)
-    exit(EXIT_FAIL_SOCKET_RECEIVE);
+  if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1){
+    *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
+    deletePacket(packet);
+    return NULL;
+  }
   packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
 int sendPacket(const int socketfd, const PACKET* packet){
   puts("\n---sendPacket---\n");
-  if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1)
-    exit(EXIT_FAIL_SOCKET_SEND);
-  if(send(socketfd, packet->content,packet->header.contentLength,0) == -1)
-    exit(EXIT_FAIL_SOCKET_SEND);
+  if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1){
+    return EXIT_FAIL_SOCKET_SEND;
+  }
+  if(send(socketfd, packet->content,packet->header.contentLength,0) == -1){
+    return EXIT_FAIL_SOCKET_SEND;
+  }
   puts("packet has been sent successfully!\n");
   return 0;
 }
 
-PACKET* makePacket(const char* fileName){
+PACKET* makePacket(const char* fileName, int* errorCode){
   puts("\n---makePacket---\n");
   FILE* file = fopen(fileName, "r");
-  if(file == NULL)
-    exit(EXIT_FAIL_FILE_OPEN);
+  if(file == NULL){
+    *errorCode = EXIT_FAIL_FILE_OPEN;
+    fclose(file);
+  }
   PACKET* packet = malloc(sizeof(PACKET));
   strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH-1);
   packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
@@ -206,9 +227,8 @@ PACKET* makePacket(const char* fileName){
   packet->content = malloc(packet->header.contentLength);
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
-    printf("error reading file\n");
+    *errorCode = EXIT_FAIL_FILE_READ;
     deletePacket(packet);
-    exit(EXIT_FAIL_FILE_READ);
   }else
     packet->content[packet->header.contentLength] = '\0';
   fclose(file);
@@ -220,7 +240,7 @@ PACKET* makePacket(const char* fileName){
 int deletePacket(PACKET* packet){
   free(packet->content);
   free(packet);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int printPacket(const PACKET* packet){
@@ -229,7 +249,7 @@ int printPacket(const PACKET* packet){
   printf("\t\tfileName: %s\n\t\tcontentLength: %"PRIu64"\n", packet->header.fileName, packet->header.contentLength);
   puts("\t---Content\n");
   printf("\t\t%s\n", packet->content);
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int notify(const char* message){
@@ -239,10 +259,10 @@ int notify(const char* message){
   printf("%s", command);
   if(system(command) == -1){
     free(command);
-    exit(EXIT_FAIL_NOTIFY_SEND);
+    return EXIT_FAIL_NOTIFY_SEND;
   }
   free(command);
-  return 0;
+  return EXIT_SUCCESS;
 }
 int printFlags(const struct FLAGS* flags){
   printf("PORT: %d\nADDR: %s\nDIR: %s\n", flags->port, flags->addr, flags->dir);
@@ -250,12 +270,12 @@ int printFlags(const struct FLAGS* flags){
     puts("TYPE: server\n");
   else
     puts("TYPE: client\n");
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 int checkHex(uint64_t n)
 {
   uint64_t swapped = bswap_64(n);
   printf("original: 0x%016"PRIx64"\nSwapped: 0x%016"PRIx64"\n", n, swapped);
-  return 0;
+  return EXIT_SUCCESS;
 }
