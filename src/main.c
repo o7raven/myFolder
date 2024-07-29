@@ -172,6 +172,7 @@ int client(struct FLAGS* flags){
   printFlags(flags);
   int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(clientSocket == -1){
+    fprintf(stderr, "0x%x: client socket create fail\n", EXIT_FAIL_SOCKET_CREATE);
     close(clientSocket);
     return EXIT_FAIL_SOCKET_CREATE;
   }
@@ -181,6 +182,7 @@ int client(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
     close(clientSocket);
+    fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
     return EXIT_FAIL_SOCKET_CONNECT;
   }
 
@@ -197,6 +199,7 @@ int client(struct FLAGS* flags){
     close(clientSocket);
     deletePacket(receivedPacket);
     fclose(newFile);
+    fprintf(stderr, "0x%x: client fail file open\n", EXIT_FAIL_FILE_OPEN);
     return EXIT_FAIL_FILE_OPEN;
   }
   fprintf(newFile,"%s", receivedPacket->content);
@@ -216,6 +219,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   puts("receiving header...\n");
   if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1){
     *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
+    fprintf(stderr, "0x%x: recvPacket socket receive header error\n", EXIT_FAIL_SOCKET_RECEIVE);
     free(packet);
     return NULL;
   }
@@ -229,6 +233,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   }
   puts("receiving content...\n");
   if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1){
+    fprintf(stderr, "0x%x: recvPacket socket receive content error\n", EXIT_FAIL_SOCKET_RECEIVE);
     *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
     deletePacket(packet);
     return NULL;
@@ -240,10 +245,12 @@ int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
   if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1){
     deletePacket(packet);
+    fprintf(stderr, "0x%x: sendPacket socket send header error\n", EXIT_FAIL_SOCKET_SEND);
     return EXIT_FAIL_SOCKET_SEND;
   }
   if(send(socketfd, packet->content,packet->header.contentLength,0) == -1){
     deletePacket(packet);
+    fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
     return EXIT_FAIL_SOCKET_SEND;
   }
   puts("packet has been sent successfully!\n");
@@ -279,6 +286,7 @@ PACKET* makePacket(const char* fileName, int* errorCode){
   puts("receiving content...\n");
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
+    fprintf(stderr, "0x%x: makePacket file read error\n", EXIT_FAIL_FILE_READ);
     *errorCode = EXIT_FAIL_FILE_READ;
     fclose(file);
     deletePacket(packet);
@@ -316,6 +324,7 @@ int notify(const char* message){
   strcat(command, message);
   printf("%s", command);
   if(system(command) == -1){
+    fprintf(stderr, "0x%x: notify system command error\n", EXIT_FAIL_NOTIFY_SEND);
     free(command);
     return EXIT_FAIL_NOTIFY_SEND;
   }
