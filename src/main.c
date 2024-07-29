@@ -199,7 +199,7 @@ int client(struct FLAGS* flags){
     close(clientSocket);
     deletePacket(receivedPacket);
     fclose(newFile);
-    fprintf(stderr, "0x%x: client fail file open\n", EXIT_FAIL_FILE_OPEN);
+    fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
   fprintf(newFile,"%s", receivedPacket->content);
