@@ -66,6 +66,7 @@ int deletePacket(PACKET* packet);
 int main(int argc, char** argv){
   if(argc < 9){
     printf("Usage: %s  --directory [what directory to watch] --type [server/client] --address --port\n", argv[0]);
+    fprintf(stderr, "0x%x: not enough arguments\n", EXIT_NOT_ENOUGH_ARGS);
     exit(EXIT_NOT_ENOUGH_ARGS);
   }
   struct FLAGS flags = {0};
@@ -88,6 +89,7 @@ int main(int argc, char** argv){
         continue;
       }
       puts("\nAborting, wrong \"--type\" flag!\n");
+      fprintf(stderr, "0x%x: wrong --type flag\n", EXIT_FAIL_TYPE);
       exit(EXIT_FAIL_TYPE);
     }
     if(!strcmp("--address", argv[i]) || !strcmp("-a", argv[i])){
@@ -97,7 +99,8 @@ int main(int argc, char** argv){
     if(!strcmp("--port", argv[i]) || !strcmp("-p", argv[i])){
       printf("[%d] Port flag reached\n", i); 
       flags.port = atoi(value);
-      if(flags.port == 0){
+      if(flags.port <= 0){
+        fprintf(stderr, "0x%x: wrong port input\n", EXIT_FAIL_PORT);
         exit(EXIT_FAIL_PORT);
       }
     }
@@ -117,10 +120,12 @@ int server(struct FLAGS* flags){
   int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
   if(serverSocket == -1){
     close(serverSocket);
+    fprintf(stderr, "0x%x: server socket create error\n", EXIT_FAIL_SOCKET_CREATE);
     return EXIT_FAIL_SOCKET_CREATE;
   }
   if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
     close(serverSocket);
+    fprintf(stderr, "0x%x: server socket reuse flag fail\n", EXIT_FAIL_SOCKET_REUSE);
     return EXIT_FAIL_SOCKET_REUSE;
   }
   struct sockaddr_in serverAddress;
@@ -129,16 +134,19 @@ int server(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   if(bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1){
     close(serverSocket);
+    fprintf(stderr, "0x%x: server socket bind fail\n", EXIT_FAIL_SOCKET_BIND);
     return EXIT_FAIL_SOCKET_BIND;
   }
   if(listen(serverSocket, 1) == -1){
     close(serverSocket);
+    fprintf(stderr, "0x%x: server socket listen fail\n", EXIT_FAIL_SOCKET_LISTEN);
     return EXIT_FAIL_SOCKET_LISTEN;
   }
   int clientSocket = accept(serverSocket, NULL, NULL);
   if(clientSocket == -1){
     close(serverSocket);
     close(clientSocket);
+    fprintf(stderr, "0x%x: server socket accept fail\n", EXIT_FAIL_SOCKET_ACCEPT);
     return EXIT_FAIL_SOCKET_ACCEPT;
   }
 
