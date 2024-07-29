@@ -31,6 +31,7 @@
 #define EXIT_FAIL_SOCKET_SEND 0x0C
 #define EXIT_FAIL_NOTIFY_SEND 0x0D
 #define EXIT_FAIL_SOCKET_REUSE 0x0E
+#define EXIT_FAIL_MALLOC 0x0F
 
 const char* notificationCommand = "notify-send "; 
 
@@ -199,6 +200,11 @@ int client(struct FLAGS* flags){
 PACKET* recvPacket(const int socketfd, int* errorCode){
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
+  if(packet==NULL){
+    fprintf(stderr, "0x%x: recvPacket packet malloc error\n", EXIT_FAIL_MALLOC);
+    *errorCode = EXIT_FAIL_MALLOC;
+    return packet;
+  }
   puts("receiving header...\n");
   if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1){
     *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
@@ -207,6 +213,12 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   }
   packet->header.contentLength = bswap_64(packet->header.contentLength);
   packet->content = malloc(packet->header.contentLength+1);
+  if(packet->content==NULL){
+    fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
+    *errorCode = EXIT_FAIL_MALLOC;
+    free(packet);
+    return NULL;
+  }
   puts("receiving content...\n");
   if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1){
     *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
@@ -238,12 +250,25 @@ PACKET* makePacket(const char* fileName, int* errorCode){
     fclose(file);
   }
   PACKET* packet = malloc(sizeof(PACKET));
+  if(packet==NULL){
+    fprintf(stderr,"0x%x: makePacket packet malloc error\n", EXIT_FAIL_MALLOC);
+    *errorCode = EXIT_FAIL_MALLOC;
+    return NULL;
+  }
+  puts("receiving content...\n");
   strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH-1);
   packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
   fseek(file, 0L, SEEK_END);
   packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
   packet->content = malloc(packet->header.contentLength);
+  if(packet->content==NULL){
+    fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
+    *errorCode = EXIT_FAIL_MALLOC;
+    free(packet);
+    return NULL;
+  }
+  puts("receiving content...\n");
   fread(packet->content, sizeof(char), packet->header.contentLength, file);
   if(ferror(file)!=0){
     *errorCode = EXIT_FAIL_FILE_READ;
@@ -275,6 +300,10 @@ int printPacket(const PACKET* packet){
 
 int notify(const char* message){
   char* command = malloc(strlen(notificationCommand)+strlen(message));
+  if(command==NULL){
+    fprintf(stderr, "0x%x: notify command malloc error\n", EXIT_FAIL_MALLOC);
+    return EXIT_FAIL_MALLOC;
+  }
   strcpy(command, notificationCommand);
   strcat(command, message);
   printf("%s", command);
