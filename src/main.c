@@ -32,6 +32,7 @@
 #define EXIT_FAIL_NOTIFY_SEND 0x0D
 #define EXIT_FAIL_SOCKET_REUSE 0x0E
 #define EXIT_FAIL_MALLOC 0x0F
+#define EXIT_FAIL_CHARACTERS_WRITTEN 0x10
 
 const char* notificationCommand = "notify-send "; 
 
@@ -202,7 +203,19 @@ int client(struct FLAGS* flags){
     fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
-  fprintf(newFile,"%s", receivedPacket->content);
+  int charactersWritten = fprintf(newFile,"%s", receivedPacket->content);
+  if(charactersWritten != strlen(receivedPacket->content)){
+    close(clientSocket);
+    deletePacket(receivedPacket);
+    fclose(newFile);
+    fprintf(stderr, "0x%x: client file written characters:%d\ncharacters to be written:%zu\n", EXIT_FAIL_CHARACTERS_WRITTEN, charactersWritten, strlen(receivedPacket->content));
+    return EXIT_FAIL_CHARACTERS_WRITTEN;
+  }
+  char* notifyMessage = " \"has been updated!\"";
+  char* message = malloc(strlen(receivedPacket->header.fileName)+strlen(notifyMessage));
+  strncpy(message, receivedPacket->header.fileName, strlen(receivedPacket->header.fileName));
+  strncat(message, notifyMessage, strlen(notifyMessage));
+  notify(message);
   fclose(newFile);
   deletePacket(receivedPacket);
   close(clientSocket);
