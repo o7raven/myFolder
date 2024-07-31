@@ -152,7 +152,7 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket("server.txt", &err);
+  PACKET* packet = makePacket("imagetobecopied.jpg", &err);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
