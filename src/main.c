@@ -152,7 +152,7 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket("server.txt", &err);
+  PACKET* packet = makePacket("imagetobecopied.jpg", &err);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
@@ -228,11 +228,19 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
     return packet;
   }
   puts("receiving header...\n");
-  if(recv(socketfd, &packet->header,sizeof(HEADER), 0) == -1){
-    *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
-    fprintf(stderr, "0x%x: recvPacket socket receive header error\n", EXIT_FAIL_SOCKET_RECEIVE);
-    free(packet);
-    return NULL;
+
+  size_t bytesReceived = 0;
+  size_t totalBytesReceived = 0;
+  size_t packetSize = sizeof(HEADER);
+  while(totalBytesReceived < packetSize){
+    bytesReceived = recv(socketfd, &packet->header,sizeof(HEADER), 0);
+    if(bytesReceived==-1){
+      *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
+      fprintf(stderr, "0x%x: recvPacket socket receive header error\n", EXIT_FAIL_SOCKET_RECEIVE);
+      free(packet);
+      return NULL;
+    }
+    totalBytesReceived+=bytesReceived;
   }
   packet->header.contentLength = bswap_64(packet->header.contentLength);
   packet->content = malloc(packet->header.contentLength+1);
@@ -243,19 +251,26 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
     return NULL;
   }
   puts("receiving content...\n");
-  if(recv(socketfd, packet->content,packet->header.contentLength, 0) == -1){
-    fprintf(stderr, "0x%x: recvPacket socket receive content error\n", EXIT_FAIL_SOCKET_RECEIVE);
-    *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
-    deletePacket(packet);
-    return NULL;
+  bytesReceived = 0;
+  totalBytesReceived = 0;
+  packetSize = packet->header.contentLength;
+  while(totalBytesReceived<packetSize){
+    bytesReceived = recv(socketfd, packet->content,packet->header.contentLength, 0);
+    if(bytesReceived==-1){
+      fprintf(stderr, "0x%x: recvPacket socket receive content error\n", EXIT_FAIL_SOCKET_RECEIVE);
+      *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
+      deletePacket(packet);
+      return NULL;
+    }
+    totalBytesReceived+=bytesReceived;
   }
   packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
 int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
-  ssize_t bytesSent = 0;
-  ssize_t totalBytesSent = 0;
+  size_t bytesSent = 0;
+  size_t totalBytesSent = 0;
   size_t packetSize = sizeof(HEADER);
   while(totalBytesSent<packetSize){
     bytesSent = send(socketfd, (char*)&packet->header+totalBytesSent, packetSize - totalBytesSent,0);
