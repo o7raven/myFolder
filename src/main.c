@@ -152,7 +152,7 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket("imagetobecopied.jpg", &err);
+  PACKET* packet = makePacket("server.txt", &err);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
@@ -254,22 +254,33 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
 }
 int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
-  int bytesSent = send(socketfd, &packet->header, sizeof(HEADER),0);
-  printf("Bytes sent: %d\n", bytesSent);
-  while(bytesSent < 1){
-    if(bytesSent<0){
+  ssize_t bytesSent = 0;
+  ssize_t totalBytesSent = 0;
+  size_t packetSize = sizeof(HEADER);
+  while(totalBytesSent<packetSize){
+    bytesSent = send(socketfd, (char*)&packet->header+totalBytesSent, packetSize - totalBytesSent,0);
+    printf("Bytes sent: %zu\n", bytesSent);
+    if(bytesSent==-1){
       deletePacket(packet);
       fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
       return EXIT_FAIL_SOCKET_SEND;
     }
-    bytesSent = send(socketfd, &packet->header, sizeof(HEADER),0);
-    printf("Bytes sent: %d\n", bytesSent);
+    totalBytesSent += bytesSent;
   }
   puts("packet header has been sent successfully!\n");
-  if(send(socketfd, packet->content,packet->header.contentLength,0) == -1){
-    deletePacket(packet);
-    fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
-    return EXIT_FAIL_SOCKET_SEND;
+
+  bytesSent = 0;
+  totalBytesSent = 0;
+  packetSize = packet->header.contentLength;
+  while(totalBytesSent<packetSize){
+    bytesSent = send(socketfd, packet->content+totalBytesSent,packet->header.contentLength - totalBytesSent,0);
+    printf("Bytes sent: %zu\n", bytesSent);
+    if(bytesSent==-1){
+      deletePacket(packet);
+      fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
+      return EXIT_FAIL_SOCKET_SEND;
+    }
+    totalBytesSent += bytesSent;
   }
   puts("packet content has been sent successfully!\n");
   return EXIT_SUCCESS;
@@ -340,7 +351,7 @@ int notify(const char* message){
   }
   strcpy(command, notificationCommand);
   strcat(command, message);
-  printf("%s", command);
+  printf("%s\n", command);
   if(system(command) == -1){
     fprintf(stderr, "0x%x: notify system command error\n", EXIT_FAIL_NOTIFY_SEND);
     free(command);
