@@ -158,10 +158,8 @@ int server(struct FLAGS* flags){
     close(clientSocket);
     return err;
   }
-  if(sendPacket(clientSocket, packet) != EXIT_SUCCESS){
+  if(sendPacket(clientSocket, packet) != EXIT_SUCCESS)
     return err;
-  }
-
   deletePacket(packet);
   close(serverSocket);
   close(clientSocket);
@@ -256,17 +254,24 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
 }
 int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
-  if(send(socketfd, &packet->header, sizeof(HEADER),0) == -1){
-    deletePacket(packet);
-    fprintf(stderr, "0x%x: sendPacket socket send header error\n", EXIT_FAIL_SOCKET_SEND);
-    return EXIT_FAIL_SOCKET_SEND;
+  int bytesSent = send(socketfd, &packet->header, sizeof(HEADER),0);
+  printf("Bytes sent: %d\n", bytesSent);
+  while(bytesSent < 1){
+    if(bytesSent<0){
+      deletePacket(packet);
+      fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
+      return EXIT_FAIL_SOCKET_SEND;
+    }
+    bytesSent = send(socketfd, &packet->header, sizeof(HEADER),0);
+    printf("Bytes sent: %d\n", bytesSent);
   }
+  puts("packet header has been sent successfully!\n");
   if(send(socketfd, packet->content,packet->header.contentLength,0) == -1){
     deletePacket(packet);
     fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
     return EXIT_FAIL_SOCKET_SEND;
   }
-  puts("packet has been sent successfully!\n");
+  puts("packet content has been sent successfully!\n");
   return EXIT_SUCCESS;
 }
 
