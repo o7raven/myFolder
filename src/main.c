@@ -271,9 +271,9 @@ int sendPacket(const int socketfd, PACKET* packet){
 
   bytesSent = 0;
   totalBytesSent = 0;
-  packetSize = packet->header.contentLength;
+  packetSize = bswap_64(packet->header.contentLength);
   while(totalBytesSent<packetSize){
-    bytesSent = send(socketfd, packet->content+totalBytesSent,packet->header.contentLength - totalBytesSent,0);
+    bytesSent = send(socketfd, packet->content+totalBytesSent,packetSize- totalBytesSent,0);
     printf("Bytes sent: %zu\n", bytesSent);
     if(bytesSent==-1){
       deletePacket(packet);
