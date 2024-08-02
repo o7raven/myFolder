@@ -233,7 +233,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   size_t totalBytesReceived = 0;
   size_t packetSize = sizeof(HEADER);
   while(totalBytesReceived < packetSize){
-    bytesReceived = recv(socketfd, &packet->header,sizeof(HEADER), 0);
+    bytesReceived = recv(socketfd, ((char*)&packet->header)+totalBytesReceived,packetSize-totalBytesReceived, 0);
     if(bytesReceived==-1){
       *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
       fprintf(stderr, "0x%x: recvPacket socket receive header error\n", EXIT_FAIL_SOCKET_RECEIVE);
@@ -256,7 +256,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   totalBytesReceived = 0;
   packetSize = packet->header.contentLength;
   while(totalBytesReceived<packetSize){
-    bytesReceived = recv(socketfd, packet->content,packet->header.contentLength, 0);
+    bytesReceived = recv(socketfd, packet->content+totalBytesReceived,packetSize-totalBytesReceived, 0);
     if(bytesReceived==-1){
       fprintf(stderr, "0x%x: recvPacket socket receive content error\n", EXIT_FAIL_SOCKET_RECEIVE);
       *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
@@ -284,7 +284,6 @@ int sendPacket(const int socketfd, PACKET* packet){
     totalBytesSent += bytesSent;
   }
   puts("packet header has been sent successfully!\n");
-
   bytesSent = 0;
   totalBytesSent = 0;
   packetSize = bswap_64(packet->header.contentLength);
