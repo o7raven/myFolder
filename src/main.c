@@ -32,7 +32,7 @@
 #define EXIT_FAIL_NOTIFY_SEND 0x0D
 #define EXIT_FAIL_SOCKET_REUSE 0x0E
 #define EXIT_FAIL_MALLOC 0x0F
-#define EXIT_FAIL_CHARACTERS_WRITTEN 0x10
+#define EXIT_FAIL_FWRITE 0x10
 
 const char* notificationCommand = "notify-send "; 
 
@@ -193,7 +193,7 @@ int client(struct FLAGS* flags){
     return err;
   }
   printPacket(receivedPacket);
-  FILE* newFile = fopen(receivedPacket->header.fileName, "w");
+  FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
   if(newFile == NULL){
     close(clientSocket);
     deletePacket(receivedPacket);
@@ -201,20 +201,20 @@ int client(struct FLAGS* flags){
     fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
-  int charactersWritten = fprintf(newFile,"%s", receivedPacket->content);
-  if(charactersWritten != strlen(receivedPacket->content)){
+  int bytesWritten = fwrite(receivedPacket->content, sizeof(char), receivedPacket->header.contentLength, newFile);
+  if(bytesWritten != receivedPacket->header.contentLength){
     close(clientSocket);
     deletePacket(receivedPacket);
     fclose(newFile);
-    fprintf(stderr, "0x%x: client file written characters:%d\ncharacters to be written:%zu\n", EXIT_FAIL_CHARACTERS_WRITTEN, charactersWritten, strlen(receivedPacket->content));
-    return EXIT_FAIL_CHARACTERS_WRITTEN;
+    fprintf(stderr, "0x%x: client file written characters:%d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
+    return EXIT_FAIL_FWRITE;
   }
+  fclose(newFile);
   char* notifyMessage = " \"has been updated!\"";
   char* message = malloc(strlen(receivedPacket->header.fileName)+strlen(notifyMessage));
   strncpy(message, receivedPacket->header.fileName, strlen(receivedPacket->header.fileName));
   strncat(message, notifyMessage, strlen(notifyMessage));
   notify(message);
-  fclose(newFile);
   deletePacket(receivedPacket);
   close(clientSocket);
   return EXIT_SUCCESS;
@@ -243,7 +243,8 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
     totalBytesReceived+=bytesReceived;
   }
   packet->header.contentLength = bswap_64(packet->header.contentLength);
-  packet->content = malloc(packet->header.contentLength+1);
+  // packet->content = malloc(packet->header.contentLength+1);
+  packet->content = malloc(packet->header.contentLength);
   if(packet->content==NULL){
     fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
     *errorCode = EXIT_FAIL_MALLOC;
@@ -264,7 +265,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
     }
     totalBytesReceived+=bytesReceived;
   }
-  packet->content[packet->header.contentLength] = '\0';
+  // packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
 int sendPacket(const int socketfd, PACKET* packet){
@@ -303,7 +304,7 @@ int sendPacket(const int socketfd, PACKET* packet){
 
 PACKET* makePacket(const char* fileName, int* errorCode){
   puts("\n---makePacket---\n");
-  FILE* file = fopen(fileName, "r");
+  FILE* file = fopen(fileName, "rb");
   if(file == NULL){
     *errorCode = EXIT_FAIL_FILE_OPEN;
     fclose(file);
@@ -314,36 +315,33 @@ PACKET* makePacket(const char* fileName, int* errorCode){
     *errorCode = EXIT_FAIL_MALLOC;
     return NULL;
   }
-  puts("receiving content...\n");
-  strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH-1);
-  packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
+  strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH);
+  // packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
   fseek(file, 0L, SEEK_END);
   packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
   packet->content = malloc(packet->header.contentLength);
+  // packet->content = malloc(packet->header.contentLength+1);
   if(packet->content==NULL){
     fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
     *errorCode = EXIT_FAIL_MALLOC;
     free(packet);
     return NULL;
   }
-  puts("receiving content...\n");
-  fread(packet->content, sizeof(char), packet->header.contentLength, file);
-  if(ferror(file)!=0){
+  puts("reading content...\n");
+  size_t bytesRead = fread(packet->content, sizeof(char), packet->header.contentLength, file);
+  if(bytesRead!= packet->header.contentLength){
     fprintf(stderr, "0x%x: makePacket file read error\n", EXIT_FAIL_FILE_READ);
     *errorCode = EXIT_FAIL_FILE_READ;
     fclose(file);
     deletePacket(packet);
     return NULL;
-  }else
-    packet->content[packet->header.contentLength] = '\0';
+  }
+  // packet->content[packet->header.contentLength] = '\0';
   fclose(file);
   printPacket(packet);
   checkHex(packet->header.contentLength);
-  FILE* newFile = fopen("testing.jpg", "w");
-  fprintf(newFile,"%s", packet->content);
   packet->header.contentLength = bswap_64(packet->header.contentLength);
-  exit(0);
   return packet;
 }
 int deletePacket(PACKET* packet){
