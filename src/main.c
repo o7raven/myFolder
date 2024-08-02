@@ -340,7 +340,10 @@ PACKET* makePacket(const char* fileName, int* errorCode){
   fclose(file);
   printPacket(packet);
   checkHex(packet->header.contentLength);
+  FILE* newFile = fopen("testing.jpg", "w");
+  fprintf(newFile,"%s", packet->content);
   packet->header.contentLength = bswap_64(packet->header.contentLength);
+  exit(0);
   return packet;
 }
 int deletePacket(PACKET* packet){
