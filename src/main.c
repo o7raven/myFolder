@@ -274,7 +274,7 @@ int sendPacket(const int socketfd, PACKET* packet){
   size_t totalBytesSent = 0;
   size_t packetSize = sizeof(HEADER);
   while(totalBytesSent<packetSize){
-    bytesSent = send(socketfd, (char*)&packet->header+totalBytesSent, packetSize - totalBytesSent,0);
+    bytesSent = send(socketfd, ((char*)&packet->header)+totalBytesSent, packetSize - totalBytesSent,0);
     printf("Bytes sent: %zu\n", bytesSent);
     if(bytesSent==-1){
       deletePacket(packet);
