@@ -216,6 +216,7 @@ int client(struct FLAGS* flags){
   fclose(newFile);
   puts("mallocing message section...\n");
   puts("passed\n");
+  notify(receivedPacket->header.fileName);
   deletePacket(receivedPacket);
   close(clientSocket);
   return EXIT_SUCCESS;
@@ -358,27 +359,23 @@ int printPacket(const PACKET* packet){
   return EXIT_SUCCESS;
 }
 
-int notify(char* message){
-  char* notificationCommand = "notify-send "; 
+int notify(char* fileName){
+  char* command = "notify-send  \"has been edited\""; 
   puts("whats it gon be\n");
-  char* command = malloc(strlen(notificationCommand)+strlen(message));
+  command = malloc(strlen(command)+strlen(fileName));
   puts("whats it gon be\n");
   if(command==NULL){
-    // free(message);
     fprintf(stderr, "0x%x: notify command malloc error\n", EXIT_FAIL_MALLOC);
     return EXIT_FAIL_MALLOC;
   }
   puts("worrked\n");
-  strcpy(command, notificationCommand);
-  strcat(command, message);
+  snprintf(command, strlen(command), "notify-send %s \"has been edited\"", fileName);
   printf("%s\n", command);
   if(system(command) == -1){
     fprintf(stderr, "0x%x: notify system command error\n", EXIT_FAIL_NOTIFY_SEND);
     free(command);
-    // free(message);
     return EXIT_FAIL_NOTIFY_SEND;
   }
-  // free(message);
   free(command);
   return EXIT_SUCCESS;
 }
