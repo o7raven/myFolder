@@ -6,7 +6,7 @@ WORKING ON (TO SOLVE)
  - FIXING MEMORY LEAKS - intentionally left out DONE
  - sending n receiving in a loop
  - saving sent file / improve project structure - DONE
- - RECEIVING BIG FILES (imagews binaries etc) - WORKING ON
+ - RECEIVING BIG FILES (imagews binaries etc) - DONE? NEED TO DO PROPER TESTING
 
 
 
