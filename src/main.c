@@ -151,7 +151,7 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket("imagetobecopied.jpg", &err);
+  PACKET* packet = makePacket("audio_testing.mp3", &err);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
