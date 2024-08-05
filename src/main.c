@@ -231,7 +231,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
   }
   puts("receiving header...\n");
 
-  size_t bytesReceived = 0;
+  ssize_t bytesReceived = 0;
   size_t totalBytesReceived = 0;
   size_t packetSize = sizeof(HEADER);
   while(totalBytesReceived < packetSize){
@@ -271,7 +271,7 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
 }
 int sendPacket(const int socketfd, PACKET* packet){
   puts("\n---sendPacket---\n");
-  size_t bytesSent = 0;
+  ssize_t bytesSent = 0;
   size_t totalBytesSent = 0;
   size_t packetSize = sizeof(HEADER);
   while(totalBytesSent<packetSize){
