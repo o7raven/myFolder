@@ -34,7 +34,6 @@
 #define EXIT_FAIL_MALLOC 0x0F
 #define EXIT_FAIL_FWRITE 0x10
 
-const char* notificationCommand = "notify-send "; 
 
 typedef struct{
   char fileName[MAX_FILENAME_LENGTH];
@@ -57,7 +56,7 @@ int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int sendPacket(const int socketfd, PACKET* packet);
 int printFlags(const struct FLAGS* flags);
-int notify(const char* message);
+int notify(char* message);
 int printPacket(const PACKET* packet);
 PACKET* makePacket(const char* fileName, int* errorCode);
 PACKET* recvPacket(const int socketfd, int* errorCode);
@@ -193,28 +192,30 @@ int client(struct FLAGS* flags){
     return err;
   }
   printPacket(receivedPacket);
+  //debug purposes
+  puts("fopen section...\n");
   FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
   if(newFile == NULL){
     close(clientSocket);
     deletePacket(receivedPacket);
-    fclose(newFile);
+    // fclose(newFile);
     fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
+  puts("passed\n");
+  puts("fwrite section...\n");
   int bytesWritten = fwrite(receivedPacket->content, sizeof(char), receivedPacket->header.contentLength, newFile);
   if(bytesWritten != receivedPacket->header.contentLength){
     close(clientSocket);
     deletePacket(receivedPacket);
-    fclose(newFile);
+    // fclose(newFile);
     fprintf(stderr, "0x%x: client file written characters:%d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
     return EXIT_FAIL_FWRITE;
   }
+  puts("passed\n");
   fclose(newFile);
-  char* notifyMessage = " \"has been updated!\"";
-  char* message = malloc(strlen(receivedPacket->header.fileName)+strlen(notifyMessage));
-  strncpy(message, receivedPacket->header.fileName, strlen(receivedPacket->header.fileName));
-  strncat(message, notifyMessage, strlen(notifyMessage));
-  notify(message);
+  puts("mallocing message section...\n");
+  puts("passed\n");
   deletePacket(receivedPacket);
   close(clientSocket);
   return EXIT_SUCCESS;
@@ -265,7 +266,6 @@ PACKET* recvPacket(const int socketfd, int* errorCode){
     }
     totalBytesReceived+=bytesReceived;
   }
-  // packet->content[packet->header.contentLength] = '\0';
   return packet;
 }
 int sendPacket(const int socketfd, PACKET* packet){
@@ -358,20 +358,27 @@ int printPacket(const PACKET* packet){
   return EXIT_SUCCESS;
 }
 
-int notify(const char* message){
+int notify(char* message){
+  char* notificationCommand = "notify-send "; 
+  puts("whats it gon be\n");
   char* command = malloc(strlen(notificationCommand)+strlen(message));
+  puts("whats it gon be\n");
   if(command==NULL){
+    // free(message);
     fprintf(stderr, "0x%x: notify command malloc error\n", EXIT_FAIL_MALLOC);
     return EXIT_FAIL_MALLOC;
   }
+  puts("worrked\n");
   strcpy(command, notificationCommand);
   strcat(command, message);
   printf("%s\n", command);
   if(system(command) == -1){
     fprintf(stderr, "0x%x: notify system command error\n", EXIT_FAIL_NOTIFY_SEND);
     free(command);
+    // free(message);
     return EXIT_FAIL_NOTIFY_SEND;
   }
+  // free(message);
   free(command);
   return EXIT_SUCCESS;
 }
