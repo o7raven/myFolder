@@ -204,12 +204,12 @@ int client(struct FLAGS* flags){
   }
   puts("passed\n");
   puts("fwrite section...\n");
-  int bytesWritten = fwrite(receivedPacket->content, sizeof(char), receivedPacket->header.contentLength, newFile);
+  uint64_t bytesWritten = fwrite(receivedPacket->content, sizeof(char), receivedPacket->header.contentLength, newFile);
   if(bytesWritten != receivedPacket->header.contentLength){
     close(clientSocket);
     deletePacket(receivedPacket);
     // fclose(newFile);
-    fprintf(stderr, "0x%x: client file written characters:%d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
+    fprintf(stderr, "0x%x: client file written characters:%"PRIu64"d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
     return EXIT_FAIL_FWRITE;
   }
   puts("passed\n");
