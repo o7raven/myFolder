@@ -12,11 +12,9 @@ WORKING ON (TO SOLVE)
 
 PROBLEMS/TODO
  - no directories x
- - fixed size (small) x
  - not a loop x
  - not a service x
  - watchdog for watching the directory x
- - notifications after directory changes x
  - database for saving connections
  - only one device possible on a single port, will have to remove the device from the db to refresh it (a feature?) 
  - maybe adding ssh key auth?
