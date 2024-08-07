@@ -4,14 +4,14 @@ WORKING ON (TO SOLVE)
  - filenames DONE
  - converting to MSB big endian - DONE
  - FIXING MEMORY LEAKS - intentionally left out DONE
- - sending n receiving in a loop
  - saving sent file / improve project structure - DONE
  - RECEIVING BIG FILES (imagews binaries etc) - DONE? NEED TO DO PROPER TESTING
  - cleaning compiler warnings
  - client error if server not active before running - FIXED client now waits until connect -ne -1 and handles ctrlc signal
+ - sending n receiving in a loop
+ - able to select a directory to work in
 PROBLEMS/TODO
- - no directories x
- - not a loop x
+ - no directories sync
  - not a service x
  - watchdog for watching the directory x
  - database for saving connections
