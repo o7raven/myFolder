@@ -8,7 +8,7 @@ WORKING ON (TO SOLVE)
  - saving sent file / improve project structure - DONE
  - RECEIVING BIG FILES (imagews binaries etc) - DONE? NEED TO DO PROPER TESTING
  - cleaning compiler warnings
- - client error if server not active before running
+ - client error if server not active before running - FIXED client now waits until connect -ne -1 and handles ctrlc signal
 PROBLEMS/TODO
  - no directories x
  - not a loop x
