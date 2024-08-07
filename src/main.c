@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <byteswap.h>
+#include <signal.h>
 //#include <intin.h> for Windows
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -34,6 +35,7 @@
 #define EXIT_FAIL_MALLOC 0x0F
 #define EXIT_FAIL_FWRITE 0x10
 
+static volatile int keepConnecting = 1;
 
 typedef struct{
   char fileName[MAX_FILENAME_LENGTH];
@@ -62,6 +64,7 @@ PACKET* makePacket(const char* fileName, int* errorCode);
 PACKET* recvPacket(const int socketfd, int* errorCode);
 int checkHex(uint64_t n);
 int deletePacket(PACKET* packet);
+void sigHandler(int sig);
 
 int main(int argc, char** argv){
   if(argc < 9){
@@ -178,11 +181,15 @@ int client(struct FLAGS* flags){
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+  puts("Connecting...\n");
+  signal(SIGINT, sigHandler);
   while(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-    puts("connecting...\n");
-    // close(clientSocket);
-    // fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-    // return EXIT_FAIL_SOCKET_CONNECT;
+    if(keepConnecting==0){
+      close(clientSocket);
+      fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
+      return EXIT_FAIL_SOCKET_CONNECT;
+    }
+
   }
 
   // error handling needed
@@ -394,4 +401,7 @@ int checkHex(uint64_t n)
   uint64_t swapped = bswap_64(n);
   printf("original: 0x%016"PRIx64"\nSwapped: 0x%016"PRIx64"\n", n, swapped);
   return EXIT_SUCCESS;
+}
+void sigHandler(int sig){
+  keepConnecting=0;
 }
