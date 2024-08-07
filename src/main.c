@@ -178,10 +178,11 @@ int client(struct FLAGS* flags){
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-  if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-    close(clientSocket);
-    fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-    return EXIT_FAIL_SOCKET_CONNECT;
+  while(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+    puts("connecting...\n");
+    // close(clientSocket);
+    // fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
+    // return EXIT_FAIL_SOCKET_CONNECT;
   }
 
   // error handling needed
