@@ -1,3 +1,7 @@
+//REMINDER FOR ME WHERE I ENDED WHEN I WENT TO SLEEP
+//YOU ENDED WITH TRYING TO FIGURE OUT HOW TO OPERATE IN DIRECTORIES BUT ENCOUNTERED A SEGFAULT IN THE MAKEPACKET FUNCTION PROB
+//BECAUSE OF THE FILENAME ARG THAT NOW STORES THE DIRETORY THE IFLE IS IN
+//LINE 184 IS WHERE YOU LEFT OFF
 #include <bits/pthreadtypes.h>
 #include <bits/types/struct_iovec.h>
 #include <netinet/in.h>
@@ -12,6 +16,21 @@
 #include <time.h>
 #include <byteswap.h>
 #include <signal.h>
+
+//windows defined for future
+#if defined (_WIN32) || defined (_WIN64)
+ #define WINDOWS 1
+#elif defined (__unix__)
+ #define UNIX 1
+#endif
+
+#ifdef WINDOWS
+ #define HOMEENV "USERPROFILE"
+#elif UNIX
+ #define HOMEENV "HOME"
+#endif
+
+
 //#include <intin.h> for Windows
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -34,6 +53,8 @@
 #define EXIT_FAIL_SOCKET_REUSE 0x0E
 #define EXIT_FAIL_MALLOC 0x0F
 #define EXIT_FAIL_FWRITE 0x10
+
+#define EXIT_FAIL_FATAL 0xFF
 
 //for development purposes later gon delete
 static const char* fileToSend = "audio_testing.mp3";
@@ -161,7 +182,6 @@ int server(struct FLAGS* flags){
   char* fileLocation = malloc(fileLocationLength);
   snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
   printf(" LOCATION = %s\n", fileLocation);
-  return 0;
   PACKET* packet = makePacket(fileLocation, &err);
   free(fileLocation);
   if(err != EXIT_SUCCESS){
@@ -201,7 +221,6 @@ int client(struct FLAGS* flags){
 
   }
 
-  return 0;
   // error handling needed
   int err = EXIT_SUCCESS;
   PACKET* receivedPacket = recvPacket(clientSocket, &err);
@@ -413,5 +432,9 @@ int checkHex(uint64_t n)
   return EXIT_SUCCESS;
 }
 void sigHandler(int sig){
+  if(keepConnecting==0){
+    //gonna fix later 
+    exit(EXIT_FAIL_FATAL);
+  }
   keepConnecting=0;
 }
