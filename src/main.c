@@ -35,6 +35,9 @@
 #define EXIT_FAIL_MALLOC 0x0F
 #define EXIT_FAIL_FWRITE 0x10
 
+//for development purposes later gon delete
+static const char* fileToSend = "audio_testing.mp3";
+
 static volatile int keepConnecting = 1;
 
 typedef struct{
@@ -154,7 +157,13 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket("audio_testing.mp3", &err);
+  const int fileLocationLength = strlen(fileToSend)+strlen((*flags).dir)+2; 
+  char* fileLocation = malloc(fileLocationLength);
+  snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
+  printf(" LOCATION = %s\n", fileLocation);
+  return 0;
+  PACKET* packet = makePacket(fileLocation, &err);
+  free(fileLocation);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
@@ -192,6 +201,7 @@ int client(struct FLAGS* flags){
 
   }
 
+  return 0;
   // error handling needed
   int err = EXIT_SUCCESS;
   PACKET* receivedPacket = recvPacket(clientSocket, &err);
