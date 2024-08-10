@@ -5,7 +5,7 @@ if [[ $1 == "comp" ]]; then
   gcc ../src/main.c -o server.out -Wall -Wextra
 fi
 
-./server.out -d null -t server -a localhost -p 3562
+./server.out -d testingdirectory -t server -a localhost -p 3562
 exit=$?
 echo "Exit status: $exit"
 
