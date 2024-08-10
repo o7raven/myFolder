@@ -347,10 +347,12 @@ int sendPacket(const int socketfd, PACKET* packet){
 PACKET* makePacket(const char* fileName, int* errorCode){
   puts("\n---makePacket---\n");
   FILE* file = fopen(fileName, "rb");
+  puts("passed\n");
   if(file == NULL){
     *errorCode = EXIT_FAIL_FILE_OPEN;
     fclose(file);
   }
+  puts("passed\n");
   PACKET* packet = malloc(sizeof(PACKET));
   if(packet==NULL){
     fprintf(stderr,"0x%x: makePacket packet malloc error\n", EXIT_FAIL_MALLOC);
