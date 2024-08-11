@@ -84,7 +84,7 @@ int sendPacket(const int socketfd, PACKET* packet);
 int printFlags(const struct FLAGS* flags);
 int notify(char* message);
 int printPacket(const PACKET* packet);
-PACKET* makePacket(const char* fileName, int* errorCode);
+PACKET* makePacket(const char* fileName, const char* directory,int* errorCode);
 PACKET* recvPacket(const int socketfd, int* errorCode);
 int checkHex(uint64_t n);
 int deletePacket(PACKET* packet);
@@ -178,12 +178,7 @@ int server(struct FLAGS* flags){
   }
 
   int err = EXIT_SUCCESS;
-  const int fileLocationLength = strlen(fileToSend)+strlen((*flags).dir)+2; 
-  char* fileLocation = malloc(fileLocationLength);
-  snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
-  printf(" LOCATION = %s\n", fileLocation);
-  PACKET* packet = makePacket(fileLocation, &err);
-  free(fileLocation);
+  PACKET* packet = makePacket(fileToSend, (*flags).dir, &err);
   if(err != EXIT_SUCCESS){
     close(serverSocket);
     close(clientSocket);
@@ -344,7 +339,11 @@ int sendPacket(const int socketfd, PACKET* packet){
   return EXIT_SUCCESS;
 }
 
-PACKET* makePacket(const char* fileName, int* errorCode){
+PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
+  // const int fileLocationLength = strlen(fileToSend)+strlen((*flags).dir)+2; 
+  // char* fileLocation = malloc(fileLocationLength);
+  // snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
+  // printf(" LOCATION = %s\n", fileLocation);
   puts("\n---makePacket---\n");
   FILE* file = fopen(fileName, "rb");
   puts("passed\n");
