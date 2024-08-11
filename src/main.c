@@ -340,12 +340,19 @@ int sendPacket(const int socketfd, PACKET* packet){
 }
 
 PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
-  // const int fileLocationLength = strlen(fileToSend)+strlen((*flags).dir)+2; 
-  // char* fileLocation = malloc(fileLocationLength);
-  // snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
-  // printf(" LOCATION = %s\n", fileLocation);
   puts("\n---makePacket---\n");
-  FILE* file = fopen(fileName, "rb");
+  const int fileLocationLength = strlen(fileToSend)+strlen(directory)+2; 
+  char* fileLocation = malloc(fileLocationLength);
+  if(fileLocation == NULL){
+    fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
+    *errorCode = EXIT_FAIL_MALLOC;
+    free(fileLocation);
+    return NULL;
+  }
+  snprintf(fileLocation, fileLocationLength,"%s/%s", directory, fileToSend); 
+  printf(" LOCATION = %s\n", fileLocation);
+  FILE* file = fopen(fileLocation, "rb");
+  free(fileLocation);
   puts("passed\n");
   if(file == NULL){
     *errorCode = EXIT_FAIL_FILE_OPEN;
@@ -366,7 +373,7 @@ PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
   packet->content = malloc(packet->header.contentLength);
   // packet->content = malloc(packet->header.contentLength+1);
   if(packet->content==NULL){
-    fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
+    fprintf(stderr,"0x%x: makePacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
     *errorCode = EXIT_FAIL_MALLOC;
     free(packet);
     return NULL;
