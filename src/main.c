@@ -231,7 +231,16 @@ int client(struct FLAGS* flags){
   printPacket(receivedPacket);
   //debug purposes
   puts("fopen section...\n");
-  FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
+  const int fileLocationLength = strlen(fileToSend)+strlen((*flags).dir)+2; 
+  char* fileLocation = malloc(fileLocationLength);
+  if(fileLocation == NULL){
+    fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
+    free(fileLocation);
+    return EXIT_FAIL_MALLOC;
+  }
+  snprintf(fileLocation, fileLocationLength,"%s/%s", (*flags).dir, fileToSend); 
+  // FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
+  FILE* newFile = fopen(fileLocation, "wb");
   if(newFile == NULL){
     close(clientSocket);
     deletePacket(receivedPacket);
