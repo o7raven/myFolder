@@ -456,3 +456,5 @@ void sigHandler(int sig){
   }
   keepConnecting=0;
 }
+//https://pastebin.com/D8Z8jGfA
+
