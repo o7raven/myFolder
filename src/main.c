@@ -240,7 +240,6 @@ int client(struct FLAGS* flags){
   if(newFile == NULL){
     close(clientSocket);
     deletePacket(receivedPacket);
-    // fclose(newFile);
     fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
@@ -250,7 +249,6 @@ int client(struct FLAGS* flags){
   if(bytesWritten != receivedPacket->header.contentLength){
     close(clientSocket);
     deletePacket(receivedPacket);
-    // fclose(newFile);
     fprintf(stderr, "0x%x: client file written characters:%"PRIu64"d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
     return EXIT_FAIL_FWRITE;
   }
@@ -361,7 +359,6 @@ PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
   puts("passed\n");
   if(file == NULL){
     *errorCode = EXIT_FAIL_FILE_OPEN;
-    fclose(file);
   }
   puts("passed\n");
   PACKET* packet = malloc(sizeof(PACKET));
