@@ -12,6 +12,7 @@ WORKING ON (TO SOLVE)
  - sending n receiving in a loop - not possible atm due to file sending being fixed and not dynamic
 
  - able to select a directory to work in - DONE probably few bugs and mistakes but overall works if correct input is supplied (working on improving it)
+ - better project structure - splitting in header files for easier access when making service 
 
 BUGS
  - client bugs when server disconnects early - something with the signal style (won't quit have to terminate)  - FIXED?
