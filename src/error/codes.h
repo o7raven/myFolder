@@ -1,4 +1,5 @@
 #ifndef ERROR_CODES_H_
+#include <stdlib.h>
 #define ERROR_CODES_H_
 #define EXIT_FAIL_SOCKET_CREATE 0x01
 #define EXIT_FAIL_SOCKET_BIND 0x02
