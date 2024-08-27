@@ -4,13 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <time.h>
-#include <byteswap.h>
 #include <signal.h>
 
 //windows defined for future
@@ -29,43 +25,12 @@
 
 //#include <intin.h> for Windows
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
 #define MAX_FILENAME_LENGTH 126
-
-#define EXIT_FAIL_SOCKET_CREATE 0x01
-#define EXIT_FAIL_SOCKET_BIND 0x02
-#define EXIT_FAIL_SOCKET_LISTEN 0x03
-#define EXIT_FAIL_SOCKET_ACCEPT 0x04
-#define EXIT_FAIL_SOCKET_CONNECT 0x05
-#define EXIT_NOT_ENOUGH_ARGS 0x06
-#define EXIT_FAIL_PORT 0x07
-#define EXIT_FAIL_TYPE 0x08
-#define EXIT_FAIL_FILE_OPEN 0x09
-#define EXIT_FAIL_FILE_READ 0x0A
-#define EXIT_FAIL_SOCKET_RECEIVE 0x0B
-#define EXIT_FAIL_SOCKET_SEND 0x0C
-#define EXIT_FAIL_NOTIFY_SEND 0x0D
-#define EXIT_FAIL_SOCKET_REUSE 0x0E
-#define EXIT_FAIL_MALLOC 0x0F
-#define EXIT_FAIL_FWRITE 0x10
-
-#define EXIT_FAIL_FATAL 0xFF
 
 //for development purposes later gon delete
 static const char* fileToSend = "audio_testing.mp3";
 
 static volatile int keepConnecting = 1;
-
-typedef struct{
-  char fileName[MAX_FILENAME_LENGTH];
-  uint64_t contentLength;
-}HEADER;
-
-typedef struct{
-  HEADER header;
-  char* content;
-} PACKET;
 
 struct FLAGS {
   uint port;
@@ -74,16 +39,13 @@ struct FLAGS {
   char type;
 };
 
+#include "network/communication.h"
+#include "network/packet.h"
+
 int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
-int sendPacket(const int socketfd, PACKET* packet);
 int printFlags(const struct FLAGS* flags);
 int notify(char* message);
-int printPacket(const PACKET* packet);
-PACKET* makePacket(const char* fileName, const char* directory,int* errorCode);
-PACKET* recvPacket(const int socketfd, int* errorCode);
-int checkHex(uint64_t n);
-int deletePacket(PACKET* packet);
 void sigHandler(int sig);
 
 int main(int argc, char** argv){
@@ -261,155 +223,7 @@ int client(struct FLAGS* flags){
   close(clientSocket);
   return EXIT_SUCCESS;
 }
-PACKET* recvPacket(const int socketfd, int* errorCode){
-  puts("\n---recvPacket---\n");
-  PACKET* packet = malloc(sizeof(PACKET));
-  if(packet==NULL){
-    fprintf(stderr, "0x%x: recvPacket packet malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    return packet;
-  }
-  puts("receiving header...\n");
 
-  ssize_t bytesReceived = 0;
-  size_t totalBytesReceived = 0;
-  size_t packetSize = sizeof(HEADER);
-  while(totalBytesReceived < packetSize){
-    bytesReceived = recv(socketfd, ((char*)&packet->header)+totalBytesReceived,packetSize-totalBytesReceived, 0);
-    if(bytesReceived==-1){
-      *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
-      fprintf(stderr, "0x%x: recvPacket socket receive header error\n", EXIT_FAIL_SOCKET_RECEIVE);
-      free(packet);
-      return NULL;
-    }
-    totalBytesReceived+=bytesReceived;
-  }
-  packet->header.contentLength = bswap_64(packet->header.contentLength);
-  // packet->content = malloc(packet->header.contentLength+1);
-  packet->content = malloc(packet->header.contentLength);
-  if(packet->content==NULL){
-    fprintf(stderr,"0x%x: recvPacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    free(packet);
-    return NULL;
-  }
-  puts("receiving content...\n");
-  bytesReceived = 0;
-  totalBytesReceived = 0;
-  packetSize = packet->header.contentLength;
-  while(totalBytesReceived<packetSize){
-    bytesReceived = recv(socketfd, packet->content+totalBytesReceived,packetSize-totalBytesReceived, 0);
-    if(bytesReceived==-1){
-      fprintf(stderr, "0x%x: recvPacket socket receive content error\n", EXIT_FAIL_SOCKET_RECEIVE);
-      *errorCode = EXIT_FAIL_SOCKET_RECEIVE;
-      deletePacket(packet);
-      return NULL;
-    }
-    totalBytesReceived+=bytesReceived;
-  }
-  return packet;
-}
-int sendPacket(const int socketfd, PACKET* packet){
-  puts("\n---sendPacket---\n");
-  ssize_t bytesSent = 0;
-  size_t totalBytesSent = 0;
-  size_t packetSize = sizeof(HEADER);
-  while(totalBytesSent<packetSize){
-    bytesSent = send(socketfd, ((char*)&packet->header)+totalBytesSent, packetSize - totalBytesSent,0);
-    printf("Bytes sent: %zu\n", bytesSent);
-    if(bytesSent==-1){
-      deletePacket(packet);
-      fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
-      return EXIT_FAIL_SOCKET_SEND;
-    }
-    totalBytesSent += bytesSent;
-  }
-  puts("packet header has been sent successfully!\n");
-  bytesSent = 0;
-  totalBytesSent = 0;
-  packetSize = bswap_64(packet->header.contentLength);
-  while(totalBytesSent<packetSize){
-    bytesSent = send(socketfd, packet->content+totalBytesSent,packetSize- totalBytesSent,0);
-    printf("Bytes sent: %zu\n", bytesSent);
-    if(bytesSent==-1){
-      deletePacket(packet);
-      fprintf(stderr, "0x%x: sendPacket socket send content error\n", EXIT_FAIL_SOCKET_SEND);
-      return EXIT_FAIL_SOCKET_SEND;
-    }
-    totalBytesSent += bytesSent;
-  }
-  puts("packet content has been sent successfully!\n");
-  return EXIT_SUCCESS;
-}
-
-PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
-  puts("\n---makePacket---\n");
-  const int fileLocationLength = strlen(fileToSend)+strlen(directory)+2; 
-  char* fileLocation = malloc(fileLocationLength);
-  if(fileLocation == NULL){
-    fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    free(fileLocation);
-    return NULL;
-  }
-  snprintf(fileLocation, fileLocationLength,"%s/%s", directory, fileToSend); 
-  printf(" LOCATION = %s\n", fileLocation);
-  FILE* file = fopen(fileLocation, "rb");
-  free(fileLocation);
-  puts("passed\n");
-  if(file == NULL){
-    *errorCode = EXIT_FAIL_FILE_OPEN;
-  }
-  puts("passed\n");
-  PACKET* packet = malloc(sizeof(PACKET));
-  if(packet==NULL){
-    fprintf(stderr,"0x%x: makePacket packet malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    return NULL;
-  }
-  strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH);
-  // packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
-  fseek(file, 0L, SEEK_END);
-  packet->header.contentLength = ftell(file);
-  fseek(file, 0L, SEEK_SET);
-  packet->content = malloc(packet->header.contentLength);
-  // packet->content = malloc(packet->header.contentLength+1);
-  if(packet->content==NULL){
-    fprintf(stderr,"0x%x: makePacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    free(packet);
-    return NULL;
-  }
-  puts("reading content...\n");
-  size_t bytesRead = fread(packet->content, sizeof(char), packet->header.contentLength, file);
-  if(bytesRead!= packet->header.contentLength){
-    fprintf(stderr, "0x%x: makePacket file read error\n", EXIT_FAIL_FILE_READ);
-    *errorCode = EXIT_FAIL_FILE_READ;
-    fclose(file);
-    deletePacket(packet);
-    return NULL;
-  }
-  // packet->content[packet->header.contentLength] = '\0';
-  fclose(file);
-  printPacket(packet);
-  checkHex(packet->header.contentLength);
-  packet->header.contentLength = bswap_64(packet->header.contentLength);
-  return packet;
-}
-int deletePacket(PACKET* packet){
-  free(packet->content);
-  free(packet);
-  return EXIT_SUCCESS;
-}
-
-int printPacket(const PACKET* packet){
-  puts("\n---printPacket---\n");
-  puts("\t---Header\n");
-  printf("\t\tfileName: %s\n\t\tcontentLength: %"PRIu64"\n", packet->header.fileName, packet->header.contentLength);
-  puts("\t---Content\n");
-  printf("\t\t%s\n", packet->content);
-  return EXIT_SUCCESS;
-}
 
 int notify(char* fileName){
   char* command = "notify-send  \"has been edited\""; 
@@ -439,13 +253,6 @@ int printFlags(const struct FLAGS* flags){
     puts("TYPE: client\n");
   return EXIT_SUCCESS;
 }
-
-int checkHex(uint64_t n)
-{
-  uint64_t swapped = bswap_64(n);
-  printf("original: 0x%016"PRIx64"\nSwapped: 0x%016"PRIx64"\n", n, swapped);
-  return EXIT_SUCCESS;
-}
 void sigHandler(int sig){
   if(keepConnecting==0){
     //gonna fix later 
@@ -453,4 +260,3 @@ void sigHandler(int sig){
   }
   keepConnecting=0;
 }
-
