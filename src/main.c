@@ -78,12 +78,11 @@ int main(int argc, char** argv){
       }
     }
   }
-  switch (flags.type) {
-    case 0:
-      makeServer(&flags);
-    case 1:
-      exit(client(&flags));
-  }
+  if(flags.type == 0)
+    makeServer(&flags);
+  else
+     client(&flags);
+  
 }
 
 int client(struct FLAGS* flags){
