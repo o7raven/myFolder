@@ -1,1 +1,1 @@
-peer to peer cloud-like daemon to share a directory among computers
+idk yet i just want to make my own file sync daemon because mediafire is slow
