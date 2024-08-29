@@ -1,13 +1,6 @@
-#include <bits/pthreadtypes.h>
-#include <bits/types/struct_iovec.h>
-#include <netinet/in.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <time.h>
 #include <signal.h>
+#include <unistd.h>
 
 //windows defined for future
 #if defined (_WIN32) || defined (_WIN64)
@@ -32,17 +25,12 @@ static const char* fileToSend = "audio_testing.mp3";
 
 static volatile int keepConnecting = 1;
 
-struct FLAGS {
-  uint port;
-  char* addr;
-  char* dir;
-  char type;
-};
 
 #include "network/communication.h"
 #include "network/packet.h"
+#include "misc/structures.h"
+#include "network/server.h"
 
-int server(struct FLAGS* flags);
 int client(struct FLAGS* flags);
 int printFlags(const struct FLAGS* flags);
 int notify(char* message);
@@ -92,63 +80,12 @@ int main(int argc, char** argv){
   }
   switch (flags.type) {
     case 0:
-      exit(server(&flags));
+      makeServer(&flags);
     case 1:
       exit(client(&flags));
   }
 }
 
-int server(struct FLAGS* flags){
-  puts("\n---server---\n");
-  puts("Starting server...\n");
-  printFlags(flags);
-  int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if(serverSocket == -1){
-    close(serverSocket);
-    fprintf(stderr, "0x%x: server socket create error\n", EXIT_FAIL_SOCKET_CREATE);
-    return EXIT_FAIL_SOCKET_CREATE;
-  }
-  if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
-    close(serverSocket);
-    fprintf(stderr, "0x%x: server socket reuse flag fail\n", EXIT_FAIL_SOCKET_REUSE);
-    return EXIT_FAIL_SOCKET_REUSE;
-  }
-  struct sockaddr_in serverAddress;
-  serverAddress.sin_family = AF_INET;
-  serverAddress.sin_port = htons((*flags).port);
-  serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-  if(bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == -1){
-    close(serverSocket);
-    fprintf(stderr, "0x%x: server socket bind fail\n", EXIT_FAIL_SOCKET_BIND);
-    return EXIT_FAIL_SOCKET_BIND;
-  }
-  if(listen(serverSocket, 1) == -1){
-    close(serverSocket);
-    fprintf(stderr, "0x%x: server socket listen fail\n", EXIT_FAIL_SOCKET_LISTEN);
-    return EXIT_FAIL_SOCKET_LISTEN;
-  }
-  int clientSocket = accept(serverSocket, NULL, NULL);
-  if(clientSocket == -1){
-    close(serverSocket);
-    close(clientSocket);
-    fprintf(stderr, "0x%x: server socket accept fail\n", EXIT_FAIL_SOCKET_ACCEPT);
-    return EXIT_FAIL_SOCKET_ACCEPT;
-  }
-
-  int err = EXIT_SUCCESS;
-  PACKET* packet = makePacket(fileToSend, (*flags).dir, &err);
-  if(err != EXIT_SUCCESS){
-    close(serverSocket);
-    close(clientSocket);
-    return err;
-  }
-  if(sendPacket(clientSocket, packet) != EXIT_SUCCESS)
-    return err;
-  deletePacket(packet);
-  close(serverSocket);
-  close(clientSocket);
-  return EXIT_SUCCESS;
-}
 int client(struct FLAGS* flags){
   puts("\n---client---\n");
   puts("Starting client...\n");
