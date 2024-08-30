@@ -1,6 +1,6 @@
 #include "communication.h"
 
-int sendServerPacket(SERVER* server){
+int sendPacket(AGENT* agent){
   puts("\n---sendPacket---\n");
   ssize_t bytesSent = 0;
   size_t totalBytesSent = 0;
@@ -33,7 +33,7 @@ int sendServerPacket(SERVER* server){
   return EXIT_SUCCESS;
 }
 
-PACKET* recvServerPacket(SERVER* server){
+PACKET* recvPacket(AGENT* agent){
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
   if(packet==NULL){

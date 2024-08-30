@@ -11,9 +11,7 @@
 #include "../structures.h"
 #include "packet.h"
 
-int sendServerPacket(SERVER* server);
-int sendClientPacket(CLIENT* client);
-PACKET* recvServerPacket(SERVER* server);
-PACKET* recvClientPacket(CLIENT* client);
+int sendPacket(AGENT* agent);
+PACKET* recvPacket(AGENT* agent);
 
 #endif
