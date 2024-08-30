@@ -12,6 +12,6 @@
 
 #include "../error/codes.h"
 
-SERVER makeServer(struct FLAGS* flags);
-int deleteSever(SERVER server);
+AGENT makeServer(struct FLAGS* flags);
+int deleteSever(AGENT agent);
 #endif // !SERVER_H_
