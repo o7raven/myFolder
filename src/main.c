@@ -24,7 +24,7 @@ static const char* fileToSend = "audio_testing.mp3";
 
 
 
-#include "misc/structures.h"
+#include "structures.h"
 #include "network/server.h"
 
 int client(struct FLAGS* flags);
