@@ -11,16 +11,10 @@ typedef struct{
   char* content;
 } PACKET;
 typedef struct{
-  int serverSocket;
-  int clientSocket;
+  int socket;
   char* directory;
   PACKET* packet;
-} SERVER;
-typedef struct{
-  int clientSocket;
-  char* directory;
-  PACKET* packet;
-} CLIENT;
+} AGENT;
 struct FLAGS {
   uint16_t port;
   char* addr;
