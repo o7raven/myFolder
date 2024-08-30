@@ -1,13 +1,14 @@
 #include "client.h"
-int makeClient(struct FLAGS* flags){
+CLIENT makeClient(struct FLAGS* flags){
+  CLIENT client = {0};
   puts("\n---client---\n");
   puts("Starting client...\n");
   // printFlags(flags);
-  int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if(clientSocket == -1){
+  client.clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+  if(client.clientSocket == -1){
     fprintf(stderr, "0x%x: client socket create fail\n", EXIT_FAIL_SOCKET_CREATE);
-    close(clientSocket);
-    return EXIT_FAIL_SOCKET_CREATE;
+    close(client.clientSocket);
+    exit(EXIT_FAIL_SOCKET_CREATE);
   }
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
@@ -15,16 +16,16 @@ int makeClient(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   puts("Connecting...\n");
   signal(SIGINT, sigHandler);
-  if(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-      close(clientSocket);
+  if(connect(client.clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+      close(client.clientSocket);
       fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-      return EXIT_FAIL_SOCKET_CONNECT;
+      exit(EXIT_FAIL_SOCKET_CONNECT);
   }
-  while(connect(clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+  while(connect(client.clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
     if(keepConnecting==0){
-      close(clientSocket);
+      close(client.clientSocket);
       fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-      return EXIT_FAIL_SOCKET_CONNECT;
+      exit(EXIT_FAIL_SOCKET_CONNECT);
     }
 
   }
@@ -70,8 +71,8 @@ int makeClient(struct FLAGS* flags){
   // puts("passed\n");
   // notify(receivedPacket->header.fileName);
   // deletePacket(receivedPacket);
-  close(clientSocket);
-  return EXIT_SUCCESS;
+  close(client.clientSocket);
+  return client;
 }
 
 

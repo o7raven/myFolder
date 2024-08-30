@@ -14,6 +14,6 @@
 
 #include "../error/codes.h"
 static volatile int keepConnecting = 1;
-int makeClient(struct FLAGS* flags);
+CLIENT makeClient(struct FLAGS* flags);
 void sigHandler(int sig);
 #endif // !CLIENT_H_
