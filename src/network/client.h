@@ -6,11 +6,14 @@
 #include <error.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <signal.h>
 
 #include "../misc/structures.h"
 #include "packet.h"
 #include "../misc/notifications.h"
 
 #include "../error/codes.h"
+static volatile int keepConnecting = 1;
 int client(struct FLAGS* flags);
+void sigHandler(int sig);
 #endif // !CLIENT_H_
