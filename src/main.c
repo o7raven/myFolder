@@ -1,5 +1,4 @@
 #include <string.h>
-#include <signal.h>
 #include <unistd.h>
 
 //windows defined for future
@@ -23,18 +22,14 @@
 //for development purposes later gon delete
 static const char* fileToSend = "audio_testing.mp3";
 
-static volatile int keepConnecting = 1;
 
 
-#include "network/communication.h"
-#include "network/packet.h"
 #include "misc/structures.h"
 #include "network/server.h"
 
 int client(struct FLAGS* flags);
 int printFlags(const struct FLAGS* flags);
 int notify(char* message);
-void sigHandler(int sig);
 
 int main(int argc, char** argv){
   if(argc < 9){
@@ -81,7 +76,7 @@ int main(int argc, char** argv){
   if(flags.type == 0)
     makeServer(&flags);
   else
-     client(&flags);
+    exit(client(&flags));
   
 }
 
@@ -95,10 +90,4 @@ int printFlags(const struct FLAGS* flags){
     puts("TYPE: client\n");
   return EXIT_SUCCESS;
 }
-void sigHandler(int sig){
-  if(keepConnecting==0){
-    //gonna fix later 
-    exit(EXIT_FAIL_FATAL);
-  }
-  keepConnecting=0;
-}
+
