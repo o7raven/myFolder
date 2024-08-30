@@ -1,5 +1,5 @@
 #include "client.h"
-int client(struct FLAGS* flags){
+int makeClient(struct FLAGS* flags){
   puts("\n---client---\n");
   puts("Starting client...\n");
   // printFlags(flags);
