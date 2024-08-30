@@ -1,3 +1,4 @@
+//going to refactor error codes later
 #ifndef ERROR_CODES_H_
 #include <stdlib.h>
 #define ERROR_CODES_H_
