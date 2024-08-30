@@ -2,6 +2,7 @@
 #include <stdio.h>
 SERVER makeServer(struct FLAGS* flags){
   SERVER server = {0}; 
+  server.directory = (*flags).dir;
   puts("\n---server---\n");
   puts("Starting server...\n");
   // printFlags(flags);
