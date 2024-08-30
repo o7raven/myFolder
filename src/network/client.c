@@ -1,5 +1,5 @@
 #include "client.h"
-AGENT makeagent(struct FLAGS* flags){
+AGENT makeClient(struct FLAGS* flags){
   AGENT agent = {0};
   puts("\n---agent---\n");
   puts("Starting agent...\n");
