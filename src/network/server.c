@@ -1,4 +1,5 @@
 #include "server.h"
+#include <stdio.h>
 SERVER makeServer(struct FLAGS* flags){
   SERVER server = {0}; 
   puts("\n---server---\n");
