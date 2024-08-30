@@ -1,58 +1,105 @@
 #include "packet.h"
 #include <string.h>
-PACKET* makePacket(const char* fileName, const char* directory, int* errorCode){
+int makeServerPacket(SERVER* server,const char* fileName){
   puts("\n---makePacket---\n");
-  const int fileLocationLength = strlen(fileName)+strlen(directory)+2; 
+  const int fileLocationLength = strlen(fileName)+strlen(server->directory)+2; 
   char* fileLocation = malloc(fileLocationLength);
   if(fileLocation == NULL){
     fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
     free(fileLocation);
-    return NULL;
+    exit(EXIT_FAIL_MALLOC);
   }
-  snprintf(fileLocation, fileLocationLength,"%s/%s", directory, fileName); 
+  snprintf(fileLocation, fileLocationLength,"%s/%s", server->directory, fileName); 
   printf(" LOCATION = %s\n", fileLocation);
   FILE* file = fopen(fileLocation, "rb");
   free(fileLocation);
   puts("passed\n");
   if(file == NULL){
-    *errorCode = EXIT_FAIL_FILE_OPEN;
+    exit(EXIT_FAIL_FILE_OPEN);
   }
   puts("passed\n");
-  PACKET* packet = malloc(sizeof(PACKET));
-  if(packet==NULL){
+  server->packet = malloc(sizeof(PACKET));
+  if(server->packet==NULL){
     fprintf(stderr,"0x%x: makePacket packet malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    return NULL;
+    exit(EXIT_FAIL_MALLOC);
   }
-  strncpy(packet->header.fileName, fileName, MAX_FILENAME_LENGTH);
+  strncpy(server->packet->header.fileName, fileName, MAX_FILENAME_LENGTH);
   // packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
   fseek(file, 0L, SEEK_END);
-  packet->header.contentLength = ftell(file);
+  server->packet->header.contentLength = ftell(file);
   fseek(file, 0L, SEEK_SET);
-  packet->content = malloc(packet->header.contentLength);
+  server->packet->content = malloc(server->packet->header.contentLength);
   // packet->content = malloc(packet->header.contentLength+1);
-  if(packet->content==NULL){
+  if(server->packet->content==NULL){
     fprintf(stderr,"0x%x: makePacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
-    *errorCode = EXIT_FAIL_MALLOC;
-    free(packet);
-    return NULL;
+    free(server->packet);
+    exit(EXIT_FAIL_MALLOC);
   }
   puts("reading content...\n");
-  size_t bytesRead = fread(packet->content, sizeof(char), packet->header.contentLength, file);
-  if(bytesRead!= packet->header.contentLength){
+  size_t bytesRead = fread(server->packet->content, sizeof(char), server->packet->header.contentLength, file);
+  if(bytesRead!= server->packet->header.contentLength){
     fprintf(stderr, "0x%x: makePacket file read error\n", EXIT_FAIL_FILE_READ);
-    *errorCode = EXIT_FAIL_FILE_READ;
     fclose(file);
-    deletePacket(packet);
-    return NULL;
+    deletePacket(server->packet);
+    exit(EXIT_FAIL_FILE_READ);
   }
   // packet->content[packet->header.contentLength] = '\0';
   fclose(file);
-  printPacket(packet);
-  checkHex(packet->header.contentLength);
-  packet->header.contentLength = bswap_64(packet->header.contentLength);
-  return packet;
+  printPacket(server->packet);
+  checkHex(server->packet->header.contentLength);
+  server->packet->header.contentLength = bswap_64(server->packet->header.contentLength);
+  return EXIT_SUCCESS;
+}
+
+int makeClientPacket(CLIENT* client,const char* fileName){
+  puts("\n---makePacket---\n");
+  const int fileLocationLength = strlen(fileName)+strlen(client->directory)+2; 
+  char* fileLocation = malloc(fileLocationLength);
+  if(fileLocation == NULL){
+    fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
+    free(fileLocation);
+    exit(EXIT_FAIL_MALLOC);
+  }
+  snprintf(fileLocation, fileLocationLength,"%s/%s", client->directory, fileName); 
+  printf(" LOCATION = %s\n", fileLocation);
+  FILE* file = fopen(fileLocation, "rb");
+  free(fileLocation);
+  puts("passed\n");
+  if(file == NULL){
+    exit(EXIT_FAIL_FILE_OPEN);
+  }
+  puts("passed\n");
+  client->packet = malloc(sizeof(PACKET));
+  if(client->packet==NULL){
+    fprintf(stderr,"0x%x: makePacket packet malloc error\n", EXIT_FAIL_MALLOC);
+    exit(EXIT_FAIL_MALLOC);
+  }
+  strncpy(client->packet->header.fileName, fileName, MAX_FILENAME_LENGTH);
+  // packet->header.fileName[MAX_FILENAME_LENGTH-1] = '\0';
+  fseek(file, 0L, SEEK_END);
+  client->packet->header.contentLength = ftell(file);
+  fseek(file, 0L, SEEK_SET);
+  client->packet->content = malloc(client->packet->header.contentLength);
+  // packet->content = malloc(packet->header.contentLength+1);
+  if(client->packet->content==NULL){
+    fprintf(stderr,"0x%x: makePacket packet->content malloc error\n", EXIT_FAIL_MALLOC);
+    free(client->packet);
+    exit(EXIT_FAIL_MALLOC);
+  }
+  puts("reading content...\n");
+  size_t bytesRead = fread(client->packet->content, sizeof(char), client->packet->header.contentLength, file);
+  if(bytesRead!= client->packet->header.contentLength){
+    fprintf(stderr, "0x%x: makePacket file read error\n", EXIT_FAIL_FILE_READ);
+    fclose(file);
+    deletePacket(client->packet);
+    exit(EXIT_FAIL_FILE_READ);
+  }
+  // packet->content[packet->header.contentLength] = '\0';
+  fclose(file);
+  printPacket(client->packet);
+  checkHex(client->packet->header.contentLength);
+  client->packet->header.contentLength = bswap_64(client->packet->header.contentLength);
+  return EXIT_SUCCESS;
 }
 int deletePacket(PACKET* packet){
   free(packet->content);
