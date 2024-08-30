@@ -4,6 +4,6 @@
 #include "network/packet.h"
 #include "misc/notifications.h"
 #include "structures.h"
-int saveFile(CLIENT* client, const char* directory);
+int saveFile(AGENT* agent, const char* directory);
 
 #endif // !saveFile_H_
