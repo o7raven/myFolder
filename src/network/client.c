@@ -1,13 +1,13 @@
 #include "client.h"
-CLIENT makeClient(struct FLAGS* flags){
-  CLIENT client = {0};
-  puts("\n---client---\n");
-  puts("Starting client...\n");
+AGENT makeagent(struct FLAGS* flags){
+  AGENT agent = {0};
+  puts("\n---agent---\n");
+  puts("Starting agent...\n");
   // printFlags(flags);
-  client.clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-  if(client.clientSocket == -1){
-    fprintf(stderr, "0x%x: client socket create fail\n", EXIT_FAIL_SOCKET_CREATE);
-    close(client.clientSocket);
+  agent.socket= socket(AF_INET, SOCK_STREAM, 0);
+  if(agent.socket == -1){
+    fprintf(stderr, "0x%x: agent socket create fail\n", EXIT_FAIL_SOCKET_CREATE);
+    close(agent.socket);
     exit(EXIT_FAIL_SOCKET_CREATE);
   }
   struct sockaddr_in serverAddress;
@@ -16,15 +16,15 @@ CLIENT makeClient(struct FLAGS* flags){
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   puts("Connecting...\n");
   signal(SIGINT, sigHandler);
-  if(connect(client.clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-      close(client.clientSocket);
-      fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
+  if(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+      close(agent.socket);
+      fprintf(stderr, "0x%x: agent socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
       exit(EXIT_FAIL_SOCKET_CONNECT);
   }
-  while(connect(client.clientSocket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
+  while(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
     if(keepConnecting==0){
-      close(client.clientSocket);
-      fprintf(stderr, "0x%x: client socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
+      close(agent.socket);
+      fprintf(stderr, "0x%x: agent socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
       exit(EXIT_FAIL_SOCKET_CONNECT);
     }
 
@@ -32,9 +32,9 @@ CLIENT makeClient(struct FLAGS* flags){
 
   // error handling needed
   // int err = EXIT_SUCCESS;
-  // PACKET* receivedPacket = recvPacket(clientSocket, &err);
+  // PACKET* receivedPacket = recvPacket(agentSocket, &err);
   // if(err != EXIT_SUCCESS){
-  //   close(clientSocket);
+  //   close(agentSocket);
   //   return err;
   // }
   // printPacket(receivedPacket);
@@ -51,18 +51,18 @@ CLIENT makeClient(struct FLAGS* flags){
   // // FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
   // FILE* newFile = fopen(fileLocation, "wb");
   // if(newFile == NULL){
-  //   close(clientSocket);
+  //   close(agentSocket);
   //   deletePacket(receivedPacket);
-  //   fprintf(stderr, "0x%x: client fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
+  //   fprintf(stderr, "0x%x: agent fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, receivedPacket->header.fileName);
   //   return EXIT_FAIL_FILE_OPEN;
   // }
   // puts("passed\n");
   // puts("fwrite section...\n");
   // uint64_t bytesWritten = fwrite(receivedPacket->content, sizeof(char), receivedPacket->header.contentLength, newFile);
   // if(bytesWritten != receivedPacket->header.contentLength){
-  //   close(clientSocket);
+  //   close(agentSocket);
   //   deletePacket(receivedPacket);
-  //   fprintf(stderr, "0x%x: client file written characters:%"PRIu64"d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
+  //   fprintf(stderr, "0x%x: agent file written characters:%"PRIu64"d\ncharacters to be written:%zu\n", EXIT_FAIL_FWRITE, bytesWritten, receivedPacket->header.contentLength);
   //   return EXIT_FAIL_FWRITE;
   // }
   // puts("passed\n");
@@ -71,8 +71,8 @@ CLIENT makeClient(struct FLAGS* flags){
   // puts("passed\n");
   // notify(receivedPacket->header.fileName);
   // deletePacket(receivedPacket);
-  close(client.clientSocket);
-  return client;
+  close(agent.socket);
+  return agent;
 }
 
 
