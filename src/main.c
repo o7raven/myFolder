@@ -19,15 +19,10 @@
 #define __STDC_FORMAT_MACROS
 #define MAX_FILENAME_LENGTH 126
 
-//for development purposes later gon delete
-static const char* fileToSend = "audio_testing.mp3";
-
-
-
 #include "structures.h"
 #include "network/server.h"
+#include "network/client.h"
 
-int client(struct FLAGS* flags);
 int printFlags(const struct FLAGS* flags);
 int notify(char* message);
 
@@ -76,7 +71,7 @@ int main(int argc, char** argv){
   if(flags.type == 0)
     makeServer(&flags);
   else
-    exit(client(&flags));
+    makeClient(&flags);
   
 }
 
