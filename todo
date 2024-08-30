@@ -1,3 +1,6 @@
+31.8.24 where i left off
+    restructured the whole project into headers but it doesnt' work gott aiffix fix it
+    when sending the audio file only 136 bytes have been sent 
 WORKING ON (TO SOLVE)
  - num1 priority - PROPER ERROR HANDLING - DONE
  - making a protocol for easier and more optimized packets - DONE
@@ -14,6 +17,7 @@ WORKING ON (TO SOLVE)
  - able to select a directory to work in - DONE probably few bugs and mistakes but overall works if correct input is supplied (working on improving it)
  - better project structure - splitting in header files for easier access when making service - working on right now
  MAKEFILE NEEDED
+ PROPER LOGGING NEEDED
 
 BUGS
  - client bugs when server disconnects early - something with the signal style (won't quit have to terminate)  - FIXED?
