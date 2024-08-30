@@ -1,6 +1,6 @@
 #include "communication.h"
 
-int sendPacket(const int socketfd, PACKET* packet){
+int sendServerPacket(SERVER* server){
   puts("\n---sendPacket---\n");
   ssize_t bytesSent = 0;
   size_t totalBytesSent = 0;
@@ -33,7 +33,7 @@ int sendPacket(const int socketfd, PACKET* packet){
   return EXIT_SUCCESS;
 }
 
-PACKET* recvPacket(const int socketfd, int* errorCode){
+PACKET* recvServerPacket(SERVER* server){
   puts("\n---recvPacket---\n");
   PACKET* packet = malloc(sizeof(PACKET));
   if(packet==NULL){

@@ -8,9 +8,12 @@
 #include <sys/socket.h>
 
 #include "../error/codes.h"
+#include "../structures.h"
 #include "packet.h"
 
-int sendPacket(const int socketfd, PACKET* packet);
-PACKET* recvPacket(const int socketfd, int* errorCode);
+int sendServerPacket(SERVER* server);
+int sendClientPacket(CLIENT* client);
+PACKET* recvServerPacket(SERVER* server);
+PACKET* recvClientPacket(CLIENT* client);
 
 #endif
