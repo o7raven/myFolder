@@ -7,16 +7,11 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 
-#include "../misc/structures.h"
+#include "../structures.h"
 #include "packet.h"
 
 #include "../error/codes.h"
 
-typedef struct{
-  int serverSocket;
-  int clientSocket;
-  PACKET* packet;
-} SERVER;
 SERVER makeServer(struct FLAGS* flags);
 int deleteSever(SERVER server);
 #endif // !SERVER_H_
