@@ -12,6 +12,7 @@
 #include "packet.h"
 
 int sendPacket(AGENT* agent);
-PACKET* recvPacket(AGENT* agent);
+int recvPacket(AGENT* agent);
+
 
 #endif
