@@ -1,7 +1,7 @@
-#include <string.h>
-#include <unistd.h>
-
 //windows defined for future
+#include "network/communication.h"
+#include "network/packet.h"
+#include <utility>
 #if defined (_WIN32) || defined (_WIN64)
  #define WINDOWS 1
 #elif defined (__unix__)
@@ -68,10 +68,14 @@ int main(int argc, char** argv){
       }
     }
   }
-  if(flags.type == 0)
-    makeServer(&flags);
-  else
-    makeClient(&flags);
+  if(flags.type == 0){
+    SERVER server = makeServer(&flags);
+    makePacket(&server, "test");
+  }
+  else{
+    CLIENT client = makeClient(&flags);
+    makePacket(&client, "nevim");
+  }
   
 }
 
