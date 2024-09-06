@@ -18,6 +18,7 @@ WORKING ON (TO SOLVE)
  - better project structure - splitting in header files for easier access when making service - working on right now
  MAKEFILE NEEDED
  PROPER LOGGING NEEDED
+ problem in saveFile.c with calculating the strlen of agent directory too tired to fix
 
 BUGS
  - client bugs when server disconnects early - something with the signal style (won't quit have to terminate)  - FIXED?
