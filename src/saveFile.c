@@ -1,14 +1,20 @@
 #include "saveFile.h"
+#include <stdint.h>
+#include <stdio.h>
 
 int saveFile(AGENT* agent){
   puts("fopen section...\n");
+  printf("filename: %lu\ndirectory:%lu\n", strlen(agent->packet->header.fileName), strlen(agent->directory));
+  printf("filename: %s\ndirectory:%s\n", agent->packet->header.fileName, (*agent).directory);
   const int fileLocationLength = strlen(agent->packet->header.fileName)+strlen((*agent).directory)+2; 
+  puts("1\n");
   char* fileLocation = malloc(fileLocationLength);
   if(fileLocation == NULL){
     fprintf(stderr,"0x%x: makePacket filelocation malloc error\n", EXIT_FAIL_MALLOC);
     free(fileLocation);
     return EXIT_FAIL_MALLOC;
   }
+  puts("2\n");
   snprintf(fileLocation, fileLocationLength,"%s/%s", (*agent).directory, agent->packet->header.fileName); 
   // FILE* newFile = fopen(receivedPacket->header.fileName, "wb");
   FILE* newFile = fopen(fileLocation, "wb");
@@ -18,6 +24,7 @@ int saveFile(AGENT* agent){
     fprintf(stderr, "0x%x: agent fail file open\nfilename:%s\n", EXIT_FAIL_FILE_OPEN, agent->packet->header.fileName);
     return EXIT_FAIL_FILE_OPEN;
   }
+  puts("3\n");
   puts("passed\n");
   puts("fwrite section...\n");
   uint64_t bytesWritten = fwrite(agent->packet->content, sizeof(char), agent->packet->header.contentLength, newFile);
@@ -28,10 +35,12 @@ int saveFile(AGENT* agent){
     return EXIT_FAIL_FWRITE;
   }
   puts("passed\n");
+  puts("4\n");
   fclose(newFile);
   puts("mallocing message section...\n");
   puts("passed\n");
   notify(agent->packet->header.fileName);
+  puts("5\n");
   return EXIT_SUCCESS;
 }
 
