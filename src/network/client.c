@@ -21,11 +21,6 @@ AGENT makeClient(struct FLAGS* flags){
       exit(EXIT_FAIL_SOCKET_CONNECT);
   }
   puts("connected");
-  if(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-      close(agent.socket);
-      fprintf(stderr, "0x%x: agent socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-  }
-  puts("connected22");
 
   // error handling needed
   // int err = EXIT_SUCCESS;
