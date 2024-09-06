@@ -15,20 +15,17 @@ AGENT makeClient(struct FLAGS* flags){
   serverAddress.sin_port = htons((*flags).port);
   serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
   puts("Connecting...\n");
-  signal(SIGINT, sigHandler);
   if(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
       close(agent.socket);
       fprintf(stderr, "0x%x: agent socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
       exit(EXIT_FAIL_SOCKET_CONNECT);
   }
-  while(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
-    if(keepConnecting==0){
+  puts("connected");
+  if(connect(agent.socket,(struct sockaddr*)&serverAddress, sizeof(serverAddress))==-1){
       close(agent.socket);
       fprintf(stderr, "0x%x: agent socket connect fail\n", EXIT_FAIL_SOCKET_CONNECT);
-      exit(EXIT_FAIL_SOCKET_CONNECT);
-    }
-
   }
+  puts("connected22");
 
   // error handling needed
   // int err = EXIT_SUCCESS;
@@ -71,15 +68,6 @@ AGENT makeClient(struct FLAGS* flags){
   // puts("passed\n");
   // notify(receivedPacket->header.fileName);
   // deletePacket(receivedPacket);
-  close(agent.socket);
   return agent;
 }
 
-
-  void sigHandler(int sig){
-  if(keepConnecting==0){
-    //gonna fix later 
-    exit(EXIT_FAIL_FATAL);
-  }
-  keepConnecting=0;
-}

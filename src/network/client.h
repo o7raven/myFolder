@@ -6,7 +6,6 @@
 #include <error.h>
 #include <stdio.h>
 #include <arpa/inet.h>
-#include <signal.h>
 
 #include "../structures.h"
 #include "packet.h"
