@@ -8,12 +8,13 @@
  #define UNIX 1
 #endif
 
+/*
 #ifdef WINDOWS
  #define HOMEENV "USERPROFILE"
 #elif UNIX
  #define HOMEENV "HOME"
 #endif
-
+*/
 
 //#include <intin.h> for Windows
 #define __STDC_FORMAT_MACROS
