@@ -4,6 +4,7 @@
 
 int saveFile(AGENT* agent){
   puts("fopen section...\n");
+  // ??
   printf("filename: %lu\ndirectory:%lu\n", strlen(agent->packet->header.fileName), strlen(agent->directory));
   printf("filename: %s\ndirectory:%s\n", agent->packet->header.fileName, (*agent).directory);
   const int fileLocationLength = strlen(agent->packet->header.fileName)+strlen((*agent).directory)+2; 
